@@ -1,0 +1,275 @@
+{
+  "meta": {
+    "generatedFrom": "PAC_BDCI_synthese_scenarisation.md + PAC_BDCI_grille_calibrage_dimensions.md",
+    "generatedAt": "2026-07-20",
+    "model": "claude-sonnet-5",
+    "modelOptionFinalSynthesis": "claude-opus-4-8",
+    "defaultWordRange": [250, 400],
+    "dayMapping": {
+      "jour1_matin": "pac1",
+      "jour1_apresmidi": "pac2",
+      "jour2_matin": "pac3",
+      "jour2_apresmidi": "pac4"
+    },
+    "cumulRules": {
+      "1_pac": "portrait_de_posture",
+      "2_pac_meme_journee": "portrait_partiel",
+      "4_pac": "bilan_complet",
+      "decrochage_isole": "portrait_de_posture"
+    }
+  },
+
+  "dimensions": {
+    "cadre_autonomie": { "label": "Cadre/Autonomie", "primaryPac": "pac1" },
+    "action_reflexion": { "label": "Action/Réflexion", "primaryPac": "pac1", "secondary": true },
+    "exigence_pragmatisme": { "label": "Exigence/Pragmatisme", "primaryPac": "pac2" },
+    "stabilite_adaptabilite": { "label": "Stabilité/Adaptabilité", "primaryPac": null, "note": "lue transversalement sur les 4 PAC via metaPostureMapping, jamais sur un PAC isolé" },
+    "relation_autonomie": { "label": "Relation/Autonomie", "primaryPac": "pac3" },
+    "visibilite_discretion": { "label": "Visibilité/Discrétion", "primaryPac": "pac4" }
+  },
+
+  "metaPostureMapping": {
+    "note": "Pour Stabilité/Adaptabilité : à chaque PAC complété, tague la tendance observée dans une des 3 lignes ci-dessous. Comparer la séquence de postures-méta sur les PAC réellement traversés (ordre fixe pac1→pac2→pac3→pac4).",
+    "initiative_propre": { "pac1": "autonomie_affirmee", "pac2": "exigence_globale", "pac3": "priorite_relationnelle", "pac4": "visibilite_comprehensive" },
+    "ajustement_mediation": { "pac1": "cadre_recherche", "pac2": "pragmatisme_cible", "pac3": "mediation_autonome", "pac4": "visibilite_defensive" },
+    "retrait_delegation": { "pac1": "attente_du_cadre", "pac2": "delegation_arbitrage", "pac3": "priorite_autorite", "pac4": "discretion_evitement" }
+  },
+
+  "pacs": [
+    {
+      "id": "pac1",
+      "order": 1,
+      "posture": "S'engager",
+      "character": "Léa Bréton",
+      "dimension": "cadre_autonomie",
+      "secondaryDimension": "action_reflexion",
+      "color": "green",
+      "mapZone": "Village associatif",
+      "situations": [
+        {
+          "id": "pac1_s1",
+          "order": 1,
+          "title": "Le stand des partenaires",
+          "palierA": {
+            "text": "Léa confie la mission à l'oral, brief à moitié rempli, elle part.",
+            "microChoiceOptions": ["Contacter un partenaire", "Commencer l'aménagement", "Chercher Marc", "Attendre Léa"]
+          },
+          "palierB": {
+            "context": null,
+            "livrable": "Note d'action structurée (250-400 mots) en 3 parties : ce que tu fais, ce que tu vérifies ou non et auprès de qui, ton niveau de confiance vu les trous.",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "autonomie_affirmee", "label": "Tranche seul, avance sans vérifier", "surprise": "Un partenaire découvre un engagement non tenu — conflit." },
+              { "id": "cadre_recherche", "label": "Vérifie d'abord, cherche un relais", "surprise": "Le relais consulté n'a pas plus d'infos — temps perdu." },
+              { "id": "attente_du_cadre", "label": "Attend le retour de Léa, reporte", "surprise": "Léa revient agacée d'avoir été sollicitée." }
+            ]
+          },
+          "palierC": { "text": "Léa répond enfin, mais avec une question qui remet en cause une partie du plan, sans le temps d'y répondre." },
+          "feedbackIntermediaire": "Reprend directement la question de Léa du palier C. Observation située sur la logique de décision activée."
+        },
+        {
+          "id": "pac1_s2",
+          "order": 2,
+          "title": "L'imprévu du vendredi",
+          "palierA": {
+            "text": "Vendredi, jour J, 15h45. Le village associatif ouvre au public dans un quart d'heure ; VIP et presse sont attendus à 17h pour l'inauguration. Un message tombe : l'intervenant prévu pour l'atelier participatif de 16h vient d'annuler pour une urgence personnelle. Le stand sera vide pile au moment où VIP et presse circuleront.",
+            "microChoiceOptions": ["Improviser une activité avec ce qu'il y a sur place", "Solliciter en urgence un autre partenaire présent sur le festival", "Prévenir Marc avant toute décision", "Laisser le stand vide et gérer autre chose en priorité"]
+          },
+          "palierB": {
+            "context": "Quelle que soit la réaction, le créneau reste à trancher, et il faut prévenir à la fois Marc (qui gère le timing du village) et le partenaire suivant, prévu juste après sur le même espace, dont le passage est fragilisé par le flottement.",
+            "livrable": "Décision sur le créneau vacant + message à Marc + message au partenaire suivant concerné — les deux messages doivent rester cohérents entre eux (250-400 mots au total).",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "autonomie_affirmee", "label": "Improvise seul avec le matériel disponible", "surprise": "Un membre de l'équipe de l'intervenant absent s'étonne de voir son matériel utilisé sans accord." },
+              { "id": "cadre_recherche", "label": "Sollicite un autre partenaire en urgence", "surprise": "Le partenaire accepte, mais demande en échange une visibilité supplémentaire ailleurs sur le festival." },
+              { "id": "attente_du_cadre", "label": "Prévient Marc et attend sa décision", "surprise": "Marc, en pleine gestion technique, met du temps à répondre — le quart d'heure s'écoule." }
+            ]
+          },
+          "palierC": { "text": "VIP et presse arrivent avec dix minutes d'avance. Léa, qui les accompagne, découvre la situation en direct, devant eux — avant d'avoir pu être prévenue ou d'avoir eu le temps qu'on s'explique." }
+        }
+      ],
+      "feedbackFinal": {
+        "anchor": "Le palier C de la situation 2 (découverte par Léa devant VIP/presse).",
+        "notes": "Signature de posture S'engager (ex. tranche vite sous pression, vigilance sur les zones non vérifiées), écart avec le portrait d'entrée, question réflexive à emporter en entreprise — la question porte sur ce qui aurait permis d'anticiper cette découverte plutôt que de la subir."
+      }
+    },
+
+    {
+      "id": "pac2",
+      "order": 2,
+      "posture": "Agir",
+      "character": "Marc Gilles",
+      "dimension": "exigence_pragmatisme",
+      "secondaryDimension": null,
+      "color": "blue",
+      "mapZone": "Régie technique",
+      "situations": [
+        {
+          "id": "pac2_s1",
+          "order": 1,
+          "title": "Le brief bénévoles",
+          "palierA": {
+            "text": "Marc envoie un document bancal + message vocal d'urgence confuse.",
+            "microChoiceOptions": null,
+            "microChoiceDescription": "Triage — quel est le problème le plus grave parmi 3-4 candidats ?"
+          },
+          "palierB": {
+            "context": "Selon ce qui a été repéré (ou raté), une conséquence apparaît plus tard — ex. si le ton trop familier n'a pas été identifié, un partenaire VIP le signale explicitement.",
+            "livrable": "Document corrigé + note d'explication à Marc (ce qui a changé et pourquoi) + question de clarification si besoin.",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "exigence_globale", "label": "Corrige tout, uniformise", "surprise": "Marc trouve que « ça ne sonne plus comme lui »." },
+              { "id": "pragmatisme_cible", "label": "Corrige juste ce qui est repéré au palier A", "surprise": "Le point raté ressurgit via un tiers." },
+              { "id": "delegation_arbitrage", "label": "Renvoie à Marc pour clarification avant de corriger", "surprise": "Marc, débordé, répond de façon évasive." }
+            ]
+          },
+          "palierC": { "text": "Marc réagit de façon piquée sur un choix précis — une réaction relationnelle ciblée, pas du flou général (territoire réservé à PAC1)." },
+          "feedbackIntermediaire": "Reprend cette réaction ciblée de Marc — teste la gestion d'un collègue qui prend mal une correction."
+        },
+        {
+          "id": "pac2_s2",
+          "order": 2,
+          "title": "Le partenaire attend",
+          "palierA": {
+            "text": "Une association partenaire, venue récupérer la fiche du jour (horaires, consignes, point de contact) pour briefer ses bénévoles, arrive plus tôt que prévu et attend sur place. Au même moment, un message de Marc tombe avec une consigne de dernière minute qui contredit un point déjà écrit dans la fiche (ex. le lieu de retrait du matériel change).",
+            "microChoiceOptions": ["Remettre la fiche telle quelle en attendant de clarifier avec Marc", "Corriger seul le point selon la nouvelle consigne, sans revalider", "Prévenir d'abord le partenaire qu'un point est en cours de vérification", "Contacter Marc pour clarification avant de remettre quoi que ce soit"]
+          },
+          "palierB": {
+            "context": "Quel que soit le choix, il faut trancher rapidement pendant que le partenaire patiente — la fiche doit finir par lui être remise.",
+            "livrable": "Fiche remise au partenaire (à jour ou accompagnée d'une précision) + message à Marc confirmant ce qui a été fait avec sa consigne (250-400 mots au total).",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "exigence_globale", "label": "Corrige entièrement la fiche selon la nouvelle consigne avant de la remettre", "surprise": "Le partenaire, qui attendait déjà, s'impatiente du délai supplémentaire." },
+              { "id": "pragmatisme_cible", "label": "Corrige uniquement le point signalé par Marc et remet la fiche rapidement", "surprise": "Un autre détail, resté inchangé, s'avère lui aussi obsolète — le partenaire le découvre sur place." },
+              { "id": "delegation_arbitrage", "label": "Contacte Marc pour clarifier avant de remettre quoi que ce soit", "surprise": "Marc, déjà sur un autre problème, tarde à répondre — le partenaire attend toujours." }
+            ]
+          },
+          "palierC": { "text": "Le partenaire signale, une fois sur site, qu'un élément de la fiche ne correspond pas à ce qui avait été convenu avec lui en amont. Marc, mis au courant, réagit de façon piquée sur le choix fait pour traiter sa consigne de dernière minute — cette fois devant témoin." }
+        }
+      ],
+      "feedbackFinal": {
+        "anchor": "Le palier C de la situation 2 (le partenaire relève un écart devant Marc).",
+        "notes": "Signature de posture Agir (ex. corrige au nom d'un standard ou traite le concret en priorité, rapport à la validation avant d'agir), écart avec le portrait d'entrée, question réflexive — la question porte sur ce qui aurait permis de sécuriser la cohérence malgré la contrainte de temps."
+      }
+    },
+
+    {
+      "id": "pac3",
+      "order": 3,
+      "posture": "Négocier",
+      "character": "Tension Léa / Marc",
+      "dimension": "relation_autonomie",
+      "secondaryDimension": null,
+      "color": "purple",
+      "mapZone": "Grande scène",
+      "situations": [
+        {
+          "id": "pac3_s1",
+          "order": 1,
+          "title": "Les deux consignes",
+          "palierA": {
+            "text": "Message de Léa, clair et urgent (caler le carré VIP avant l'arrivée presse à 16h).",
+            "microChoiceOptions": null,
+            "microChoiceDescription": "Réaction à chaud, avant même de savoir pour Marc."
+          },
+          "palierB": {
+            "context": "Le message contradictoire de Marc arrive (sécurité côté scène) — le vrai conflit se révèle.",
+            "livrable": "Réponse écrite à Léa, réponse écrite à Marc, message à l'équipe bénévole si la décision les touche — plusieurs destinataires à tenir en cohérence.",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "priorite_autorite", "label": "Priorise Léa, répond à Marc plus tard", "surprise": "Marc se sent snobé, insiste." },
+              { "id": "priorite_relationnelle", "label": "Priorise Marc, répond à Léa plus tard", "surprise": "Léa découvre le retard, s'étonne." },
+              { "id": "mediation_autonome", "label": "Cherche un compromis avant de répondre à l'un ou l'autre", "surprise": "Les deux relancent en parallèle, pression double." }
+            ]
+          },
+          "palierC": { "text": "L'un des deux découvre la réponse faite à l'autre avant la fin du temps imparti." },
+          "feedbackIntermediaire": "Reprend cette découverte croisée."
+        },
+        {
+          "id": "pac3_s2",
+          "order": 2,
+          "title": "Le conflit ouvert",
+          "palierA": {
+            "text": "Plus tard dans la session, Léa et Marc se retrouvent réunis avec l'étudiant·e — par exemple pour trancher si la deuxième scène peut ouvrir plus tôt que prévu afin de rattraper le retard d'un artiste. Léa pousse pour l'ouverture anticipée (VIP et presse déjà informés d'un horaire) ; Marc s'y oppose fermement (sécurité pas encore validée côté scène). Contrairement à la situation 1, les deux sont présents en même temps et s'opposent directement, chacun attendant que l'étudiant·e tranche devant l'autre.",
+            "microChoiceOptions": ["Donner raison à Léa sur-le-champ", "Donner raison à Marc sur-le-champ", "Demander un temps de réflexion avant de répondre", "Proposer immédiatement une piste de compromis"]
+          },
+          "palierB": {
+            "context": "Quel que soit le choix, une position doit être formulée et communiquée aux deux en même temps — plus d'échappatoire séquentielle possible comme en situation 1.",
+            "livrable": "Message unique adressé à Léa et Marc en même temps, formulant clairement une position (pas une esquive) et la façon dont elle répond — ou non — à chacune des deux préoccupations (250-400 mots).",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "priorite_autorite", "label": "Tranche en faveur de Léa", "surprise": "Marc, mis devant le fait accompli sur un point de sécurité, le fait savoir directement et fermement." },
+              { "id": "priorite_relationnelle", "label": "Tranche en faveur de Marc", "surprise": "Léa, surprise d'être contredite devant elle, questionne ouvertement le choix." },
+              { "id": "mediation_autonome", "label": "Propose un compromis (ex. ouverture partielle, sécurité renforcée)", "surprise": "Les deux acceptent en apparence, mais chacun relance ensuite pour obtenir davantage dans son sens." }
+            ]
+          },
+          "palierC": { "text": "La tension ne retombe pas — Léa et Marc, chacun insatisfait à des degrés divers, se tournent de nouveau vers l'étudiant·e pour trancher une seconde fois, sans qu'aucun compromis proposé ne semble suffire à clore le désaccord." }
+        }
+      ],
+      "feedbackFinal": {
+        "anchor": "Le palier C de la situation 2 (tension qui ne retombe pas malgré la prise de position).",
+        "notes": "Signature de posture Négocier (ex. cherche le compromis qui évite de froisser, ou tranche vite quitte à mécontenter, vigilance sur le fait de retarder la décision), écart avec le portrait d'entrée, question réflexive — la question porte sur ce qui pourrait clore un désaccord qu'aucun compromis ne semble suffire à résoudre."
+      }
+    },
+
+    {
+      "id": "pac4",
+      "order": 4,
+      "posture": "Recevoir",
+      "character": "Sami Reinach",
+      "dimension": "visibilite_discretion",
+      "secondaryDimension": null,
+      "color": "orange",
+      "mapZone": "Espace presse",
+      "vigilanceNote": "Le feedback de Sami doit être net et direct, jamais vague — le flou est le territoire de PAC1, pas de PAC4. Ce qui reste flou chez Sami, c'est son envie d'écourter la conversation, pas le contenu du problème.",
+      "situations": [
+        {
+          "id": "pac4_s1",
+          "order": 1,
+          "title": "Le retour direct",
+          "palierA": {
+            "text": "Sami annonce sans détour un problème concret (gestion du stand qui a créé un souci avec un partenaire, vu jusqu'à la presse), puis tente de couper court (« faut que je file »).",
+            "microChoiceOptions": null,
+            "microChoiceDescription": "Laisser partir ou retenir."
+          },
+          "palierB": {
+            "context": "Si retenu, Sami reste et donne un peu plus de contexte, toujours net ; si laissé filer, le sujet reste en suspens.",
+            "livrable": "Réponse écrite à ce qui vient d'être dit.",
+            "wordRange": [250, 400],
+            "tendencies": [
+              { "id": "visibilite_comprehensive", "label": "Retient Sami, cherche à comprendre en profondeur", "surprise": "Sami dévoile une dimension du problème encore plus délicate." },
+              { "id": "visibilite_defensive", "label": "Retient Sami, mais se justifie plus qu'il ne comprend", "surprise": "Sami se braque, la conversation se ferme." },
+              { "id": "discretion_evitement", "label": "Laisse filer Sami", "surprise": "Le sujet ressurgit plus tard, non résolu." }
+            ]
+          },
+          "palierC": { "text": "Réaction de Sami selon le choix — reste évasif sur la suite de la relation, jamais sur le fond du problème." },
+          "feedbackIntermediaire": "Observation sur défensive/justification vs. compréhension, et sur l'initiative ou non de clore le sujet malgré la fuite de Sami."
+        },
+        {
+          "id": "pac4_s2",
+          "order": 2,
+          "title": "Devant les autres",
+          "palierA": {
+            "text": "Plus tard dans la session, lors d'un point d'équipe où Léa est présente, elle demande un état des lieux général de la communication du jour. Sami, présent aussi, évoque de nouveau — cette fois devant Léa — le sujet non résolu de la situation 1 (le souci avec le partenaire remonté jusqu'à la presse). L'étudiant·e se retrouve à devoir en parler, avec un niveau d'exposition sociale plus élevé qu'en tête-à-tête.",
+            "microChoiceOptions": ["Exposer la situation en détail devant Léa", "Rester factuel mais succinct", "Minimiser le sujet devant Léa", "Laisser Sami mener la suite de l'échange"]
+          },
+          "palierB": {
+            "context": "Quel que soit le choix, Léa pose une question de suivi et demande un point écrit avant la fin de la journée, ce qui oblige à formaliser ce qui, en situation 1, pouvait rester oral.",
+            "livrable": "Note de suivi écrite à Léa (150-300 mots) récapitulant la situation avec le partenaire et ce qui a été fait ou reste à faire.",
+            "wordRange": [150, 300],
+            "tendencies": [
+              { "id": "visibilite_comprehensive", "label": "Expose la situation en détail, assume la confrontation devant Léa", "surprise": "Léa apprécie la transparence, mais pose une question précise sur un aspect non anticipé." },
+              { "id": "visibilite_defensive", "label": "Expose les faits en se justifiant davantage qu'en clarifiant", "surprise": "Léa perçoit la gêne et insiste pour obtenir une version plus factuelle." },
+              { "id": "discretion_evitement", "label": "Minimise ou reste évasif devant Léa", "surprise": "Léa, déjà informée en partie par le partenaire concerné, revient plus tard avec une question plus directe." }
+            ]
+          },
+          "palierC": { "text": "Sami, présent pendant l'échange, réagit à la façon dont l'étudiant·e a présenté les choses devant Léa — sans jamais revenir sur le fond du problème, il se positionne (confirme, laisse porter seul, ou minimise à son tour), ajoutant une tension non résolue sur la fiabilité du binôme aux yeux de Léa." }
+        }
+      ],
+      "feedbackFinal": {
+        "anchor": "Le palier C de la situation 2 (positionnement de Sami devant Léa).",
+        "notes": "Signature de posture Recevoir, écart avec le portrait d'entrée, question réflexive — clôture du cycle des 4 postures. La question porte sur ce qui se joue quand la manière de recevoir une critique devient elle-même visible par un tiers."
+      }
+    }
+  ]
+}
