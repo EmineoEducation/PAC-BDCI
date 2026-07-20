@@ -29,7 +29,7 @@ export default async function handler(req, res) {
     }
 
     const { system, prompt } = buildBarnumPortraitPrompt({ answers, questions: BARNUM_QUESTIONS })
-    const portraitText = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 1500, temperature: 0.7 })
+    const portraitText = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 1500 })
 
     session.barnumProfile = {
       text: portraitText,

@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       tendencies: situation.palierB.tendencies,
       studentText,
     })
-    const classification = await askClaudeJSON({ system: classifySystem, prompt: classifyPrompt, model: MODEL_DEFAULT, maxTokens: 600, temperature: 0.5 })
+    const classification = await askClaudeJSON({ system: classifySystem, prompt: classifyPrompt, model: MODEL_DEFAULT, maxTokens: 600 })
 
     const entry = {
       pacId,
@@ -71,7 +71,7 @@ export default async function handler(req, res) {
         studentText,
         surpriseText: classification.surpriseText,
       })
-      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 400, temperature: 0.7 })
+      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 400 })
     } else {
       const allTextsThisPac = session.entries
         .filter((e) => e.pacId === pacId)
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
         barnumSummary: session.barnumProfile?.text,
         allStudentTexts: allTextsThisPac,
       })
-      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 500, temperature: 0.7 })
+      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 500 })
 
       // Tag de posture-méta pour Stabilité/Adaptabilité, basé sur la tendance de situation 2.
       const tag = tagMetaPosture(pacId, classification.matchedTendencyId, pacContent.metaPostureMapping)
