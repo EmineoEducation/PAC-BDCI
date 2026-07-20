@@ -102,7 +102,13 @@ export default async function handler(req, res) {
 
     return res.status(200).json(result)
   } catch (err) {
-    console.error('Erreur /api/respond', err)
-    return res.status(500).json({ error: 'Erreur serveur lors du traitement de la réponse.' })
+    console.error('Erreur /api/respond :', JSON.stringify(err, Object.getOwnPropertyNames(err), 2))
+    const detail =
+      err?.error?.error?.message ||
+      err?.error?.message ||
+      err?.message ||
+      JSON.stringify(err?.error || err) ||
+      'Erreur inconnue'
+    return res.status(500).json({ error: `Erreur serveur lors du traitement de la réponse : ${detail}` })
   }
 }

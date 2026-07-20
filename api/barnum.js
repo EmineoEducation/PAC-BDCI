@@ -39,7 +39,14 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ portrait: session.barnumProfile })
   } catch (err) {
-    console.error('Erreur /api/barnum', err)
-    return res.status(500).json({ error: 'Erreur serveur lors de la génération du portrait.' })
+    // Log en profondeur complète — évite les "{…}" tronqués dans les logs Vercel.
+    console.error('Erreur /api/barnum :', JSON.stringify(err, Object.getOwnPropertyNames(err), 2))
+    const detail =
+      err?.error?.error?.message ||
+      err?.error?.message ||
+      err?.message ||
+      JSON.stringify(err?.error || err) ||
+      'Erreur inconnue'
+    return res.status(500).json({ error: `Erreur serveur lors de la génération du portrait : ${detail}` })
   }
 }
