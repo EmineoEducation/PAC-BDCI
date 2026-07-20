@@ -11,11 +11,12 @@ export const anthropic = new Anthropic({
 export const MODEL_DEFAULT = 'claude-sonnet-5'
 export const MODEL_SYNTHESIS_OPTION = 'claude-opus-4-8'
 
-export async function askClaude({ system, prompt, model = MODEL_DEFAULT, maxTokens = 1200, temperature = 0.7 }) {
+// `temperature` est déprécié pour Sonnet 5 (retiré le 20/07 suite à l'erreur
+// API "temperature is deprecated for this model") — ne plus l'envoyer.
+export async function askClaude({ system, prompt, model = MODEL_DEFAULT, maxTokens = 1200 }) {
   const response = await anthropic.messages.create({
     model,
     max_tokens: maxTokens,
-    temperature,
     system,
     messages: [{ role: 'user', content: prompt }],
   })
