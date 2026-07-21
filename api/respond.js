@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       tendencies: situation.palierB.tendencies,
       studentText,
     })
-    const classification = await askClaudeJSON({ system: classifySystem, prompt: classifyPrompt, model: MODEL_DEFAULT, maxTokens: 600 })
+    const classification = await askClaudeJSON({ system: classifySystem, prompt: classifyPrompt, model: MODEL_DEFAULT, maxTokens: 1000 })
 
     const entry = {
       pacId,
