@@ -8,10 +8,10 @@ export default async function handler(req, res) {
   try {
     if (req.method === 'POST') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-      const { nom, prenom, formation, campus } = body || {}
+      const { nom, prenom, email, formation, campus } = body || {}
 
-      if (!nom || !prenom || !formation || !campus) {
-        return res.status(400).json({ error: 'nom, prenom, formation et campus sont requis.' })
+      if (!nom || !prenom || !email || !formation || !campus) {
+        return res.status(400).json({ error: 'nom, prenom, email, formation et campus sont requis.' })
       }
 
       const id = randomUUID()
@@ -19,6 +19,7 @@ export default async function handler(req, res) {
         id,
         nom,
         prenom,
+        email,
         formation,
         campus,
         createdAt: new Date().toISOString(),
