@@ -3,12 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { createSession } from '../lib/api.js'
 import { useSession } from '../lib/SessionContext.jsx'
 
-const FORMATIONS = ['MSMC', 'CDRH', 'MMD', 'MDO']
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Portal1Identification() {
   const navigate = useNavigate()
   const { setSession } = useSession()
-  const [form, setForm] = useState({ nom: '', prenom: '', formation: '', campus: '' })
+  const [form, setForm] = useState({ nom: '', prenom: '', email: '', formation: '', campus: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
 
@@ -19,8 +19,12 @@ export default function Portal1Identification() {
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
-    if (!form.nom || !form.prenom || !form.formation || !form.campus) {
+    if (!form.nom || !form.prenom || !form.email || !form.formation || !form.campus) {
       setError('Merci de remplir tous les champs.')
+      return
+    }
+    if (!EMAIL_RE.test(form.email)) {
+      setError('Cette adresse mail ne semble pas valide.')
       return
     }
     setSubmitting(true)
@@ -37,32 +41,19 @@ export default function Portal1Identification() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-[var(--font-body)]">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white rounded-xl border border-neutral-200 shadow-sm p-8"
+        className="w-full max-w-md bg-white/70 rounded-xl border border-rule shadow-sm p-8"
       >
-        <p className="text-xs tracking-wide text-neutral-500 mb-1">Festival Hémisphères — 3ᵉ édition</p>
-        <h1 className="text-xl font-medium text-neutral-900 mb-6">Bienvenue, coordinateur·rice</h1>
+        <p className="text-xs tracking-wide text-ink-muted mb-1">Festival Hémisphères — 3ᵉ édition</p>
+        <h1 className="font-[var(--font-display)] font-semibold text-xl text-ink mb-6">Bienvenue, coordinateur·rice</h1>
 
         <div className="space-y-4">
           <Field label="Nom" value={form.nom} onChange={(v) => update('nom', v)} />
           <Field label="Prénom" value={form.prenom} onChange={(v) => update('prenom', v)} />
-
-          <div>
-            <label className="block text-sm text-neutral-700 mb-1">Formation</label>
-            <select
-              className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm"
-              value={form.formation}
-              onChange={(e) => update('formation', e.target.value)}
-            >
-              <option value="">Sélectionner...</option>
-              {FORMATIONS.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
-          </div>
-
+          <Field label="Mail" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="prenom.nom@eminéo.fr" />
+          <Field label="Formation" value={form.formation} onChange={(v) => update('formation', v)} placeholder="ex. MSMC" />
           <Field label="Campus" value={form.campus} onChange={(v) => update('campus', v)} placeholder="ex. LYO" />
         </div>
 
@@ -71,7 +62,7 @@ export default function Portal1Identification() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full bg-neutral-900 text-white rounded-lg py-2.5 text-sm font-medium disabled:opacity-50"
+          className="mt-6 w-full bg-accent text-[var(--color-paper)] rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50"
         >
           {submitting ? 'Un instant...' : 'Entrer dans le festival'}
         </button>
@@ -80,13 +71,13 @@ export default function Portal1Identification() {
   )
 }
 
-function Field({ label, value, onChange, placeholder }) {
+function Field({ label, value, onChange, placeholder, type = 'text' }) {
   return (
     <div>
-      <label className="block text-sm text-neutral-700 mb-1">{label}</label>
+      <label className="block text-sm text-ink-muted mb-1">{label}</label>
       <input
-        type="text"
-        className="w-full border border-neutral-300 rounded-lg px-3 py-2 text-sm"
+        type={type}
+        className="w-full border border-rule rounded-lg px-3 py-2 text-sm bg-white/80 focus:outline-none focus:ring-2 focus:ring-pac1/25 focus:border-accent"
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
