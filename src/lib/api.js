@@ -50,3 +50,15 @@ export async function submitResponse({ sessionId, pacId, situationId, choiceLabe
     body: JSON.stringify({ sessionId, pacId, situationId, choiceLabel, studentText }),
   })
 }
+
+export async function fetchCharlieHistory(sessionId) {
+  return request(`/api/charlie?sessionId=${encodeURIComponent(sessionId)}`, { method: 'GET' })
+}
+
+export async function sendCharlieMessage({ sessionId, message }) {
+  return request('/api/charlie', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId, message }),
+  })
+}
