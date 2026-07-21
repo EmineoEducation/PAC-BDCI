@@ -27,10 +27,23 @@ export async function askClaude({ system, prompt, model = MODEL_DEFAULT, maxToke
 // Force une réponse JSON stricte — utilisé pour la classification de tendance.
 export async function askClaudeJSON(args) {
   const raw = await askClaude(args)
-  const cleaned = raw.replace(/```json|```/g, '').trim()
+  let cleaned = raw.replace(/```json|```/g, '').trim()
+
+  // Filet de sécurité : si le modèle ajoute un préambule ou un commentaire
+  // malgré la consigne "JSON strict, sans texte avant ou après", on isole le
+  // plus grand bloc { ... } plutôt que d'échouer sur la moindre phrase parasite.
+  const firstBrace = cleaned.indexOf('{')
+  const lastBrace = cleaned.lastIndexOf('}')
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.slice(firstBrace, lastBrace + 1)
+  }
+
   try {
     return JSON.parse(cleaned)
-  } catch (err) {
-    throw new Error(`Réponse non-JSON de Claude : ${cleaned.slice(0, 200)}`)
+  } catch {
+    // Fenêtre élargie (500 au lieu de 200) + réponse brute complète dans les logs serveur
+    // (Vercel → Functions/Logs) pour permettre un vrai diagnostic sans dépendre de ce message.
+    console.error('askClaudeJSON — réponse brute reçue de Claude :', raw)
+    throw new Error(`Réponse non-JSON de Claude (voir logs serveur pour le contenu complet) : ${cleaned.slice(0, 500) || '(réponse vide)'}`)
   }
 }
