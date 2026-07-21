@@ -19,11 +19,11 @@ async function request(url, options) {
   return data
 }
 
-export async function createSession({ nom, prenom, formation, campus }) {
+export async function createSession({ nom, prenom, email, formation, campus }) {
   const data = await request('/api/session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nom, prenom, formation, campus }),
+    body: JSON.stringify({ nom, prenom, email, formation, campus }),
   })
   storeSessionId(data.session.id)
   return data.session
