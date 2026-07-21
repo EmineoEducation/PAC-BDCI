@@ -2,6 +2,14 @@
   "meta": {
     "generatedFrom": "PAC_BDCI_synthese_scenarisation.md + PAC_BDCI_grille_calibrage_dimensions.md",
     "generatedAt": "2026-07-20",
+    "revisedAt": "2026-07-21",
+    "revisionNotes": [
+      "Situations 2 de PAC2, PAC3, PAC4 resserrées avec ancrage temporel et enjeux chiffrés, au niveau de précision de PAC1 S2.",
+      "PAC4 S1 — tendance 'visibilite_comprehensive' rééquilibrée : la surprise inclut désormais un coût (message urgent manqué).",
+      "PAC2 — ajout d'un characterNote sur Marc (réflexe systématique et non rancunier).",
+      "Constat carnet de bord (capture d'écran) : les 'text' de Situation 1 restaient au registre 'note de régie' (pas immersifs comme les S2), aucun texte ne reliait le micro-choix fait à la tâche d'écriture suivante, et le livrable s'affichait comme texte pré-rempli dans le champ de réponse plutôt que comme label au-dessus.",
+      "Correctifs : (1) 'text' de PAC1/2/3/4 S1 réécrits en scènes immersives (ancrage horaire, enjeu, decor) ; (2) 'microChoiceOptions' concrètes ajoutées pour PAC2/PAC3/PAC4 S1 (remplacent les 'microChoiceDescription' vagues) ; (3) 'microChoiceBridges' ajouté sur les 8 situations — un texte de transition propre à chaque choix, entre le badge de choix retenu et la tâche d'écriture ; (4) bloc 'uiGuidelines' ajouté pour figer l'ordre d'affichage et interdire le livrable en texte pré-rempli."
+    ],
     "model": "claude-sonnet-5",
     "modelOptionFinalSynthesis": "claude-opus-4-8",
     "defaultWordRange": [250, 400],
@@ -17,6 +25,13 @@
       "4_pac": "bilan_complet",
       "decrochage_isole": "portrait_de_posture"
     }
+  },
+
+  "uiGuidelines": {
+    "palierScreenOrder": ["contexte narré (palierA.text ou palierB.context)", "badge 'Choix retenu' (si applicable)", "microChoiceBridges[choix]", "label de tâche (livrable + wordRange)", "champ de réponse vide"],
+    "livrableDisplay": "Le texte du livrable attendu (format, nombre de mots) s'affiche comme un label au-dessus du champ de réponse — jamais comme texte pré-rempli à l'intérieur du champ, pour ne pas laisser croire que la tâche est déjà entamée.",
+    "responseFieldPlaceholder": "Écris ta réponse ici…",
+    "note": "Le contexte doit toujours précéder la tâche d'écriture. Le bridge (texte de transition propre au choix fait, champ microChoiceBridges) doit s'afficher entre le badge de choix retenu et le label de tâche, pour que la réponse s'inscrive comme continuité de l'état de fait, jamais comme un formulaire déconnecté de ce qui vient de se passer dans la fiction."
   },
 
   "dimensions": {
@@ -51,8 +66,14 @@
           "order": 1,
           "title": "Le stand des partenaires",
           "palierA": {
-            "text": "Léa confie la mission à l'oral, brief à moitié rempli, elle part.",
-            "microChoiceOptions": ["Contacter un partenaire", "Commencer l'aménagement", "Chercher Marc", "Attendre Léa"]
+            "text": "Jeudi, 9h15. Ta première matinée sur le village associatif. Léa passe en coup de vent, un carnet à la main : « Le stand des partenaires, c'est toi qui gères — j'ai noté l'essentiel, mais il me manque deux confirmations, je n'ai pas eu le temps. » Elle te tend une feuille à moitié remplie et repart déjà vers la régie, sans plus de détails.",
+            "microChoiceOptions": ["Contacter un partenaire", "Commencer l'aménagement", "Chercher Marc", "Attendre Léa"],
+            "microChoiceBridges": {
+              "Contacter un partenaire": "Tu décides de joindre directement un partenaire pour avancer sans attendre le retour de Léa. Le téléphone sonne un instant avant qu'on ne décroche — il va falloir consigner ta démarche pendant que ça se met en place.",
+              "Commencer l'aménagement": "Tu préfères commencer à installer le stand avec ce que tu as sous la main, plutôt que d'attendre des précisions. Le temps presse un peu — il va falloir formaliser ce que tu fais et pourquoi, brief incomplet ou pas.",
+              "Chercher Marc": "Tu pars à la recherche de Marc, en espérant qu'il ait un peu plus de visibilité que toi sur ce brief à moitié rempli.",
+              "Attendre Léa": "Tu décides d'attendre que Léa revienne préciser les choses. Le stand reste tel quel, le brief à moitié rempli posé sur la table. Les minutes passent, sans nouvelle d'elle — mais il faut déjà consigner ta position."
+            }
           },
           "palierB": {
             "context": null,
@@ -73,7 +94,13 @@
           "title": "L'imprévu du vendredi",
           "palierA": {
             "text": "Vendredi, jour J, 15h45. Le village associatif ouvre au public dans un quart d'heure ; VIP et presse sont attendus à 17h pour l'inauguration. Un message tombe : l'intervenant prévu pour l'atelier participatif de 16h vient d'annuler pour une urgence personnelle. Le stand sera vide pile au moment où VIP et presse circuleront.",
-            "microChoiceOptions": ["Improviser une activité avec ce qu'il y a sur place", "Solliciter en urgence un autre partenaire présent sur le festival", "Prévenir Marc avant toute décision", "Laisser le stand vide et gérer autre chose en priorité"]
+            "microChoiceOptions": ["Improviser une activité avec ce qu'il y a sur place", "Solliciter en urgence un autre partenaire présent sur le festival", "Prévenir Marc avant toute décision", "Laisser le stand vide et gérer autre chose en priorité"],
+            "microChoiceBridges": {
+              "Improviser une activité avec ce qu'il y a sur place": "Tu choisis d'improviser avec ce qu'il y a sous la main plutôt que d'attendre une solution extérieure. Il te reste un quart d'heure pour transformer ça en quelque chose de présentable — et pour en informer les bonnes personnes.",
+              "Solliciter en urgence un autre partenaire présent sur le festival": "Tu tentes de trouver en urgence un partenaire de remplacement. Le temps presse, mais si ça marche, ça peut sauver le créneau — reste à voir à quel prix.",
+              "Prévenir Marc avant toute décision": "Tu préfères prévenir Marc avant de trancher quoi que ce soit. Le quart d'heure continue de s'écouler pendant que tu attends son retour.",
+              "Laisser le stand vide et gérer autre chose en priorité": "Tu décides de laisser le stand vide pour l'instant et de te concentrer sur autre chose de plus urgent à tes yeux. Le compte à rebours avant l'arrivée de VIP et presse continue, lui, de tourner."
+            }
           },
           "palierB": {
             "context": "Quelle que soit la réaction, le créneau reste à trancher, et il faut prévenir à la fois Marc (qui gère le timing du village) et le partenaire suivant, prévu juste après sur le même espace, dont le passage est fragilisé par le flottement.",
@@ -99,6 +126,7 @@
       "order": 2,
       "posture": "Agir",
       "character": "Marc Gilles",
+      "characterNote": "Marc réagit vite et de façon vive dès qu'il sent ses consignes remises en question — un réflexe plus qu'un choix pesé, qui retombe aussi vite une fois qu'il a pu s'exprimer. Ce n'est jamais rancunier, mais c'est systématique. À intégrer tel quel dans le script NotebookLM de Marc (semaine 1, vendredi).",
       "dimension": "exigence_pragmatisme",
       "secondaryDimension": null,
       "color": "blue",
@@ -109,9 +137,15 @@
           "order": 1,
           "title": "Le brief bénévoles",
           "palierA": {
-            "text": "Marc envoie un document bancal + message vocal d'urgence confuse.",
-            "microChoiceOptions": null,
-            "microChoiceDescription": "Triage — quel est le problème le plus grave parmi 3-4 candidats ?"
+            "text": "Samedi, 8h05. Les bénévoles arrivent à 9h pour leur briefing du jour — le document qui doit leur être distribué vient d'atterrir dans ta boîte, envoyé par Marc cette nuit à 23h40. Il est suivi d'un message vocal confus, débité trop vite, où Marc évoque « deux-trois trucs à corriger avant demain matin » sans jamais préciser lesquels. En relisant le document, plusieurs points te sautent aux yeux.",
+            "microChoiceDescription": "Triage — quel est le problème le plus grave parmi les candidats identifiés ?",
+            "microChoiceOptions": ["Le ton trop familier, pas vraiment adapté à des partenaires professionnels", "Une erreur d'horaire sur le rendez-vous des bénévoles", "L'absence d'un point de contact en cas de souci le jour J", "Le flou sur qui fait quoi parmi les bénévoles"],
+            "microChoiceBridges": {
+              "Le ton trop familier, pas vraiment adapté à des partenaires professionnels": "Tu repères en premier le ton beaucoup trop familier du document — pas vraiment ce qu'on attend d'un support remis à des partenaires professionnels. Il va falloir décider, dans la correction, jusqu'où aller.",
+              "Une erreur d'horaire sur le rendez-vous des bénévoles": "Tu repères en premier une erreur d'horaire sur le rendez-vous des bénévoles — un détail qui, s'il passe inaperçu, peut désorganiser toute la matinée.",
+              "L'absence d'un point de contact en cas de souci le jour J": "Tu repères en premier l'absence d'un point de contact en cas de souci sur place — un vide gênant pour des bénévoles livrés à eux-mêmes le jour J.",
+              "Le flou sur qui fait quoi parmi les bénévoles": "Tu repères en premier le flou sur qui fait quoi parmi les bénévoles — de quoi créer des redites ou des trous une fois sur le terrain."
+            }
           },
           "palierB": {
             "context": "Selon ce qui a été repéré (ou raté), une conséquence apparaît plus tard — ex. si le ton trop familier n'a pas été identifié, un partenaire VIP le signale explicitement.",
@@ -131,20 +165,26 @@
           "order": 2,
           "title": "Le partenaire attend",
           "palierA": {
-            "text": "Une association partenaire, venue récupérer la fiche du jour (horaires, consignes, point de contact) pour briefer ses bénévoles, arrive plus tôt que prévu et attend sur place. Au même moment, un message de Marc tombe avec une consigne de dernière minute qui contredit un point déjà écrit dans la fiche (ex. le lieu de retrait du matériel change).",
-            "microChoiceOptions": ["Remettre la fiche telle quelle en attendant de clarifier avec Marc", "Corriger seul le point selon la nouvelle consigne, sans revalider", "Prévenir d'abord le partenaire qu'un point est en cours de vérification", "Contacter Marc pour clarification avant de remettre quoi que ce soit"]
+            "text": "Samedi, 10h20. Le village associatif accueille son premier gros flux de la journée à 11h — deux groupes scolaires et une trentaine de bénévoles à briefer avant l'arrivée du public. L'association partenaire est déjà en salle d'attente : elle doit récupérer la fiche du jour maintenant pour lancer son propre briefing avant 10h45, sous peine de démarrer en retard sur les scolaires. Au même instant, un message de Marc tombe : le point de retrait du matériel change, contredisant ce qui est déjà écrit noir sur blanc sur la fiche prête à être remise.",
+            "microChoiceOptions": ["Remettre la fiche telle quelle en attendant de clarifier avec Marc", "Corriger seul le point selon la nouvelle consigne, sans revalider", "Prévenir d'abord le partenaire qu'un point est en cours de vérification", "Contacter Marc pour clarification avant de remettre quoi que ce soit"],
+            "microChoiceBridges": {
+              "Remettre la fiche telle quelle en attendant de clarifier avec Marc": "Tu décides de remettre la fiche telle quelle pour l'instant, quitte à clarifier avec Marc après coup. Le partenaire la prend en main et commence déjà à la parcourir.",
+              "Corriger seul le point selon la nouvelle consigne, sans revalider": "Tu corriges toi-même le point selon la nouvelle consigne de Marc, sans attendre de revalidation. La fiche est prête à être remise dans la foulée.",
+              "Prévenir d'abord le partenaire qu'un point est en cours de vérification": "Tu préviens d'abord le partenaire qu'un point est en cours de vérification, avant de trancher quoi que ce soit sur le fond. Il patiente, un peu surpris du délai.",
+              "Contacter Marc pour clarification avant de remettre quoi que ce soit": "Tu contactes Marc pour clarifier avant de remettre quoi que ce soit. Le partenaire, lui, continue d'attendre pendant que tu essaies de le joindre."
+            }
           },
           "palierB": {
-            "context": "Quel que soit le choix, il faut trancher rapidement pendant que le partenaire patiente — la fiche doit finir par lui être remise.",
+            "context": "25 minutes avant le briefing bénévoles, moins encore avant l'arrivée des scolaires — aucune marge pour attendre une clarification complète.",
             "livrable": "Fiche remise au partenaire (à jour ou accompagnée d'une précision) + message à Marc confirmant ce qui a été fait avec sa consigne (250-400 mots au total).",
             "wordRange": [250, 400],
             "tendencies": [
-              { "id": "exigence_globale", "label": "Corrige entièrement la fiche selon la nouvelle consigne avant de la remettre", "surprise": "Le partenaire, qui attendait déjà, s'impatiente du délai supplémentaire." },
-              { "id": "pragmatisme_cible", "label": "Corrige uniquement le point signalé par Marc et remet la fiche rapidement", "surprise": "Un autre détail, resté inchangé, s'avère lui aussi obsolète — le partenaire le découvre sur place." },
-              { "id": "delegation_arbitrage", "label": "Contacte Marc pour clarifier avant de remettre quoi que ce soit", "surprise": "Marc, déjà sur un autre problème, tarde à répondre — le partenaire attend toujours." }
+              { "id": "exigence_globale", "label": "Corrige entièrement la fiche selon la nouvelle consigne avant de la remettre", "surprise": "Les bénévoles démarrent leur briefing avec 10 minutes de retard, grignotant la marge avant les scolaires." },
+              { "id": "pragmatisme_cible", "label": "Corrige uniquement le point signalé par Marc et remet la fiche rapidement", "surprise": "Le partenaire découvre sur place, devant ses bénévoles, qu'un horaire d'atelier a changé sans que la fiche en tienne compte." },
+              { "id": "delegation_arbitrage", "label": "Contacte Marc pour clarifier avant de remettre quoi que ce soit", "surprise": "Les minutes filent, le partenaire regarde sa montre — les scolaires seront là avant que la fiche ne soit remise." }
             ]
           },
-          "palierC": { "text": "Le partenaire signale, une fois sur site, qu'un élément de la fiche ne correspond pas à ce qui avait été convenu avec lui en amont. Marc, mis au courant, réagit de façon piquée sur le choix fait pour traiter sa consigne de dernière minute — cette fois devant témoin." }
+          "palierC": { "text": "Vingt minutes plus tard, une fois les scolaires arrivés, le partenaire signale qu'un élément de la fiche ne correspond pas à ce qui avait été convenu en amont. Marc, mis au courant, réagit — cette fois devant témoin." }
         }
       ],
       "feedbackFinal": {
@@ -168,9 +208,15 @@
           "order": 1,
           "title": "Les deux consignes",
           "palierA": {
-            "text": "Message de Léa, clair et urgent (caler le carré VIP avant l'arrivée presse à 16h).",
-            "microChoiceOptions": null,
-            "microChoiceDescription": "Réaction à chaud, avant même de savoir pour Marc."
+            "text": "Samedi, 15h10. Un message de Léa tombe, clair et sans détour : « Le carré VIP doit être bouclé avant l'arrivée de la presse à 16h. Je compte sur toi. » Rien d'autre, pas de détail — mais le ton ne laisse pas de place au doute. Tu n'as pas encore connaissance d'un autre message, arrivé au même moment sur un autre fil.",
+            "microChoiceDescription": "Réaction à chaud, avant même de savoir pour Marc.",
+            "microChoiceOptions": ["Foncer directement vers le carré VIP pour commencer tout de suite", "Répondre à Léa pour confirmer que tu t'en charges, avant de bouger", "Vérifier rapidement l'état actuel du carré VIP avant d'agir", "Prévenir l'équipe bénévole en amont, pour gagner du temps"],
+            "microChoiceBridges": {
+              "Foncer directement vers le carré VIP pour commencer tout de suite": "Tu fonces directement vers le carré VIP, sans attendre. C'est en y arrivant que le message contradictoire de Marc s'affiche sur ton téléphone.",
+              "Répondre à Léa pour confirmer que tu t'en charges, avant de bouger": "Tu prends dix secondes pour répondre à Léa que tu t'en charges. C'est à cet instant que le message de Marc arrive, contredisant ce que tu viens de confirmer.",
+              "Vérifier rapidement l'état actuel du carré VIP avant d'agir": "Tu vérifies rapidement où en est le carré VIP avant de te lancer. Le message de Marc tombe pendant que tu es encore en train de regarder.",
+              "Prévenir l'équipe bénévole en amont, pour gagner du temps": "Tu préviens d'abord l'équipe bénévole pour gagner du temps. C'est à ce moment précis que le message contradictoire de Marc arrive."
+            }
           },
           "palierB": {
             "context": "Le message contradictoire de Marc arrive (sécurité côté scène) — le vrai conflit se révèle.",
@@ -190,20 +236,26 @@
           "order": 2,
           "title": "Le conflit ouvert",
           "palierA": {
-            "text": "Plus tard dans la session, Léa et Marc se retrouvent réunis avec l'étudiant·e — par exemple pour trancher si la deuxième scène peut ouvrir plus tôt que prévu afin de rattraper le retard d'un artiste. Léa pousse pour l'ouverture anticipée (VIP et presse déjà informés d'un horaire) ; Marc s'y oppose fermement (sécurité pas encore validée côté scène). Contrairement à la situation 1, les deux sont présents en même temps et s'opposent directement, chacun attendant que l'étudiant·e tranche devant l'autre.",
-            "microChoiceOptions": ["Donner raison à Léa sur-le-champ", "Donner raison à Marc sur-le-champ", "Demander un temps de réflexion avant de répondre", "Proposer immédiatement une piste de compromis"]
+            "text": "Samedi, 18h40. Le concert de la deuxième scène devait démarrer à 19h, mais l'artiste tête d'affiche annonce 20 minutes de retard technique. Léa veut ouvrir la scène côté public dès maintenant pour absorber le flux avant qu'un attroupement ne se forme dehors — VIP et presse sont annoncés pour 19h précises. Marc s'y oppose : la vérification sécurité de la fosse n'est validée qu'à 19h05 au plus tôt, pas avant. Contrairement à la situation 1, les deux sont présents en même temps et s'opposent directement, chacun attendant que l'étudiant·e tranche devant l'autre.",
+            "microChoiceOptions": ["Donner raison à Léa sur-le-champ", "Donner raison à Marc sur-le-champ", "Demander un temps de réflexion avant de répondre", "Proposer immédiatement une piste de compromis"],
+            "microChoiceBridges": {
+              "Donner raison à Léa sur-le-champ": "Tu donnes raison à Léa, sans détour, devant les deux. Marc encaisse en silence — pour l'instant.",
+              "Donner raison à Marc sur-le-champ": "Tu donnes raison à Marc, sans détour, devant les deux. C'est au tour de Léa d'accuser le coup.",
+              "Demander un temps de réflexion avant de répondre": "Tu demandes un temps de réflexion avant de trancher. Léa et Marc échangent un regard, visiblement peu habitués à attendre une réponse.",
+              "Proposer immédiatement une piste de compromis": "Tu proposes tout de suite une piste de compromis, sans attendre que l'un ou l'autre insiste. Les deux t'écoutent, silencieux, en attendant la suite."
+            }
           },
           "palierB": {
-            "context": "Quel que soit le choix, une position doit être formulée et communiquée aux deux en même temps — plus d'échappatoire séquentielle possible comme en situation 1.",
+            "context": "Une position doit être formulée dans les 10 minutes qui restent avant l'arrivée annoncée de VIP/presse, communiquée aux deux en même temps — plus d'échappatoire séquentielle possible comme en situation 1.",
             "livrable": "Message unique adressé à Léa et Marc en même temps, formulant clairement une position (pas une esquive) et la façon dont elle répond — ou non — à chacune des deux préoccupations (250-400 mots).",
             "wordRange": [250, 400],
             "tendencies": [
-              { "id": "priorite_autorite", "label": "Tranche en faveur de Léa", "surprise": "Marc, mis devant le fait accompli sur un point de sécurité, le fait savoir directement et fermement." },
-              { "id": "priorite_relationnelle", "label": "Tranche en faveur de Marc", "surprise": "Léa, surprise d'être contredite devant elle, questionne ouvertement le choix." },
-              { "id": "mediation_autonome", "label": "Propose un compromis (ex. ouverture partielle, sécurité renforcée)", "surprise": "Les deux acceptent en apparence, mais chacun relance ensuite pour obtenir davantage dans son sens." }
+              { "id": "priorite_autorite", "label": "Tranche en faveur de Léa", "surprise": "Marc l'exprime fermement, devant les premiers visiteurs déjà massés à la barrière." },
+              { "id": "priorite_relationnelle", "label": "Tranche en faveur de Marc", "surprise": "Léa questionne ouvertement le choix, alors que VIP et presse arrivent dans les minutes suivantes." },
+              { "id": "mediation_autonome", "label": "Propose un compromis (ex. ouverture partielle, sécurité renforcée)", "surprise": "Les deux acceptent en apparence, mais chacun relance pour obtenir davantage — l'horloge continue de tourner vers 19h." }
             ]
           },
-          "palierC": { "text": "La tension ne retombe pas — Léa et Marc, chacun insatisfait à des degrés divers, se tournent de nouveau vers l'étudiant·e pour trancher une seconde fois, sans qu'aucun compromis proposé ne semble suffire à clore le désaccord." }
+          "palierC": { "text": "Vingt minutes plus tard, VIP et presse commencent à arriver. La tension ne retombe pas — Léa et Marc se tournent de nouveau vers l'étudiant·e, sans qu'aucun compromis ne semble clore le désaccord." }
         }
       ],
       "feedbackFinal": {
@@ -228,16 +280,20 @@
           "order": 1,
           "title": "Le retour direct",
           "palierA": {
-            "text": "Sami annonce sans détour un problème concret (gestion du stand qui a créé un souci avec un partenaire, vu jusqu'à la presse), puis tente de couper court (« faut que je file »).",
-            "microChoiceOptions": null,
-            "microChoiceDescription": "Laisser partir ou retenir."
+            "text": "Dimanche, 11h30. Sami passe en trombe près de toi, la mine grave : « Il y a eu un souci avec un partenaire côté stand — ça serait remonté jusqu'à la presse. » Il regarde déjà sa montre. « Faut que je file, on m'attend. » Il s'apprête à repartir sans en dire davantage.",
+            "microChoiceDescription": "Laisser partir ou retenir — choix binaire par construction, les nuances comprendre/se justifier n'apparaissent qu'au palier B.",
+            "microChoiceOptions": ["Retenir Sami pour en savoir plus", "Le laisser filer, il a dit l'essentiel"],
+            "microChoiceBridges": {
+              "Retenir Sami pour en savoir plus": "Tu retiens Sami avant qu'il ne s'échappe. Il souffle, s'arrête une seconde — visiblement pressé, mais pas fermé à en dire un peu plus.",
+              "Le laisser filer, il a dit l'essentiel": "Tu laisses filer Sami, qui disparaît aussi vite qu'il est arrivé. Le sujet reste en suspens, sans plus de détails que ce qu'il vient de lâcher."
+            }
           },
           "palierB": {
             "context": "Si retenu, Sami reste et donne un peu plus de contexte, toujours net ; si laissé filer, le sujet reste en suspens.",
             "livrable": "Réponse écrite à ce qui vient d'être dit.",
             "wordRange": [250, 400],
             "tendencies": [
-              { "id": "visibilite_comprehensive", "label": "Retient Sami, cherche à comprendre en profondeur", "surprise": "Sami dévoile une dimension du problème encore plus délicate." },
+              { "id": "visibilite_comprehensive", "label": "Retient Sami, cherche à comprendre en profondeur", "surprise": "Sami dévoile une dimension plus délicate du problème — mais le temps pris à l'écouter jusqu'au bout fait manquer un autre message urgent resté sans réponse pendant l'échange." },
               { "id": "visibilite_defensive", "label": "Retient Sami, mais se justifie plus qu'il ne comprend", "surprise": "Sami se braque, la conversation se ferme." },
               { "id": "discretion_evitement", "label": "Laisse filer Sami", "surprise": "Le sujet ressurgit plus tard, non résolu." }
             ]
@@ -250,20 +306,26 @@
           "order": 2,
           "title": "Devant les autres",
           "palierA": {
-            "text": "Plus tard dans la session, lors d'un point d'équipe où Léa est présente, elle demande un état des lieux général de la communication du jour. Sami, présent aussi, évoque de nouveau — cette fois devant Léa — le sujet non résolu de la situation 1 (le souci avec le partenaire remonté jusqu'à la presse). L'étudiant·e se retrouve à devoir en parler, avec un niveau d'exposition sociale plus élevé qu'en tête-à-tête.",
-            "microChoiceOptions": ["Exposer la situation en détail devant Léa", "Rester factuel mais succinct", "Minimiser le sujet devant Léa", "Laisser Sami mener la suite de l'échange"]
+            "text": "Dimanche, 17h. Point d'équipe hebdomadaire avant le bilan du week-end — Léa, Marc et Sami réunis, plus l'étudiant·e. Léa a dix minutes avant son prochain rendez-vous presse et demande un tour de table rapide. Sami ramène sur la table, devant elle, le sujet non résolu de la situation 1 (le souci avec le partenaire remonté jusqu'à la presse). L'étudiant·e se retrouve à devoir en parler, avec un niveau d'exposition sociale plus élevé qu'en tête-à-tête.",
+            "microChoiceOptions": ["Exposer la situation en détail devant Léa", "Rester factuel mais succinct", "Minimiser le sujet devant Léa", "Laisser Sami mener la suite de l'échange"],
+            "microChoiceBridges": {
+              "Exposer la situation en détail devant Léa": "Tu exposes la situation en détail devant Léa, sans filtrer. Marc et Sami écoutent, silencieux, pendant que tu déroules.",
+              "Rester factuel mais succinct": "Tu restes factuel, sans en dire plus que nécessaire. Léa hoche la tête, mais son regard laisse deviner qu'elle attend peut-être un peu plus.",
+              "Minimiser le sujet devant Léa": "Tu minimises le sujet devant Léa, en évitant d'entrer dans les détails. Sami, à côté de toi, ne dit rien — mais ne confirme rien non plus.",
+              "Laisser Sami mener la suite de l'échange": "Tu laisses Sami reprendre la suite de l'échange à ta place. Léa se tourne alors vers lui, en attendant sa version."
+            }
           },
           "palierB": {
-            "context": "Quel que soit le choix, Léa pose une question de suivi et demande un point écrit avant la fin de la journée, ce qui oblige à formaliser ce qui, en situation 1, pouvait rester oral.",
+            "context": "Dix minutes de réunion ; Léa demande un point écrit avant 18h, ce qui oblige à formaliser ce qui, en situation 1, pouvait rester oral.",
             "livrable": "Note de suivi écrite à Léa (150-300 mots) récapitulant la situation avec le partenaire et ce qui a été fait ou reste à faire.",
             "wordRange": [150, 300],
             "tendencies": [
-              { "id": "visibilite_comprehensive", "label": "Expose la situation en détail, assume la confrontation devant Léa", "surprise": "Léa apprécie la transparence, mais pose une question précise sur un aspect non anticipé." },
-              { "id": "visibilite_defensive", "label": "Expose les faits en se justifiant davantage qu'en clarifiant", "surprise": "Léa perçoit la gêne et insiste pour obtenir une version plus factuelle." },
-              { "id": "discretion_evitement", "label": "Minimise ou reste évasif devant Léa", "surprise": "Léa, déjà informée en partie par le partenaire concerné, revient plus tard avec une question plus directe." }
+              { "id": "visibilite_comprehensive", "label": "Expose la situation en détail, assume la confrontation devant Léa", "surprise": "Léa apprécie la transparence, mais pose une question précise à régler avant son rendez-vous de 17h30." },
+              { "id": "visibilite_defensive", "label": "Expose les faits en se justifiant davantage qu'en clarifiant", "surprise": "Léa perçoit la gêne et insiste pour une version plus factuelle avant la fin des dix minutes." },
+              { "id": "discretion_evitement", "label": "Minimise ou reste évasif devant Léa", "surprise": "Léa, déjà informée en partie par le partenaire concerné, revient plus tard dans l'après-midi avec une question plus directe, cette fois sans témoin." }
             ]
           },
-          "palierC": { "text": "Sami, présent pendant l'échange, réagit à la façon dont l'étudiant·e a présenté les choses devant Léa — sans jamais revenir sur le fond du problème, il se positionne (confirme, laisse porter seul, ou minimise à son tour), ajoutant une tension non résolue sur la fiabilité du binôme aux yeux de Léa." }
+          "palierC": { "text": "Sami, toujours présent, réagit à la façon dont l'étudiant·e a présenté les choses avant que Léa ne parte — sans jamais revenir sur le fond du problème, il se positionne (confirme, laisse porter seul, ou minimise à son tour), ajoutant une tension non résolue sur la fiabilité du binôme aux yeux de Léa." }
         }
       ],
       "feedbackFinal": {
