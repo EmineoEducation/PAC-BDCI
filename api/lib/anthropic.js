@@ -10,6 +10,7 @@ export const anthropic = new Anthropic({
 // si besoin ponctuel de qualité maximale (non activé par défaut).
 export const MODEL_DEFAULT = 'claude-sonnet-5'
 export const MODEL_SYNTHESIS_OPTION = 'claude-opus-4-8'
+export const MODEL_CHARLIE = 'claude-haiku-4-5-20251001'
 
 // `temperature` est déprécié pour Sonnet 5 (retiré le 20/07 suite à l'erreur
 // API "temperature is deprecated for this model") — ne plus l'envoyer.
@@ -19,6 +20,19 @@ export async function askClaude({ system, prompt, model = MODEL_DEFAULT, maxToke
     max_tokens: maxTokens,
     system,
     messages: [{ role: 'user', content: prompt }],
+  })
+  const textBlock = response.content.find((b) => b.type === 'text')
+  return textBlock ? textBlock.text : ''
+}
+
+// Échange multi-tours (historique de messages) — utilisé par Charlie, qui garde
+// le fil de la conversation sur toute la durée de la session de l'étudiant·e.
+export async function askClaudeConversation({ system, messages, model = MODEL_CHARLIE, maxTokens = 300 }) {
+  const response = await anthropic.messages.create({
+    model,
+    max_tokens: maxTokens,
+    system,
+    messages,
   })
   const textBlock = response.content.find((b) => b.type === 'text')
   return textBlock ? textBlock.text : ''
