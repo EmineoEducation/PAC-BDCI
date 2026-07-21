@@ -47,13 +47,18 @@ export default function CharlieWidget({ sessionId }) {
     <div className="fixed bottom-5 right-5 z-50 font-[var(--font-body)]">
       {open && (
         <div className="w-80 h-96 bg-paper border border-rule rounded-xl shadow-xl flex flex-col mb-3 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-rule bg-paper-side shrink-0">
-            <span className="w-2 h-2 rounded-full bg-accent" />
+          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-rule bg-paper-side shrink-0">
+            <img src="/charlie/avatar.png" alt="" className="w-7 h-7 rounded-full object-cover" />
             <p className="text-[13.5px] font-semibold">Charlie · coordination générale</p>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
             {!loaded && <p className="text-[13px] text-ink-muted italic">Un instant...</p>}
+            {loaded && history.length <= 1 && (
+              <div className="flex justify-center pb-1">
+                <img src="/charlie/bust.png" alt="Charlie" className="w-32 h-auto" />
+              </div>
+            )}
             {history.map((m, i) => (
               <div key={i} className={`text-[14px] leading-relaxed ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <span
@@ -88,10 +93,14 @@ export default function CharlieWidget({ sessionId }) {
 
       <button
         onClick={() => setOpen((o) => !o)}
-        className="bg-accent text-[var(--color-paper)] rounded-full w-14 h-14 shadow-lg flex items-center justify-center text-2xl hover:opacity-90 transition-opacity"
+        className="relative bg-accent rounded-full w-16 h-16 shadow-lg overflow-hidden hover:scale-105 transition-transform"
         title={open ? 'Fermer la discussion avec Charlie' : 'Parler à Charlie'}
       >
-        {open ? '×' : '💬'}
+        {open ? (
+          <span className="flex items-center justify-center w-full h-full text-[var(--color-paper)] text-2xl">×</span>
+        ) : (
+          <img src="/charlie/avatar.png" alt="Charlie" className="w-full h-full object-cover" />
+        )}
       </button>
     </div>
   )
