@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
 import { isPacUnlocked } from '../lib/progression.js'
 import pacContent from '../data/pacContent.json'
+import CharlieWidget from '../components/CharlieWidget.jsx'
 
 // Coordonnées approximatives (en % de l'image) — à recaler précisément une fois
 // le plan intégré en conditions réelles, par simple ajustement visuel des valeurs
@@ -66,6 +67,8 @@ export default function Portal2Map() {
       <p className="text-xs text-neutral-500 mt-3">
         Les zones grisées se débloquent une fois le PAC précédent terminé.
       </p>
+
+      {session?.id && <CharlieWidget sessionId={session.id} />}
     </div>
   )
 }

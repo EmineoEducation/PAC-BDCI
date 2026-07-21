@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
 import { isPacUnlocked } from '../lib/progression.js'
@@ -19,6 +19,35 @@ const BANNER_BY_PAC = {
 
 // Garde-fou anti-soumission vide (permet d'activer le bouton) — pas une contrainte de qualité rédactionnelle.
 const MIN_WORDS_TO_ENABLE_SUBMIT = 20
+
+// Repère de temps purement indicatif — aucun verrou, juste un rappel du gabarit visé (3h30/PAC).
+// Démarre au premier chargement de ce PAC, persiste en localStorage pour survivre à un rafraîchissement.
+function usePacElapsed(pacId) {
+  const [elapsedMs, setElapsedMs] = useState(0)
+
+  useEffect(() => {
+    const storageKey = `pacbdci_pac_start_${pacId}`
+    let start = Number(localStorage.getItem(storageKey))
+    if (!start) {
+      start = Date.now()
+      localStorage.setItem(storageKey, String(start))
+    }
+    const tick = () => setElapsedMs(Date.now() - start)
+    tick()
+    const id = setInterval(tick, 10000)
+    return () => clearInterval(id)
+  }, [pacId])
+
+  return elapsedMs
+}
+
+function formatElapsed(ms) {
+  const totalMin = Math.floor(ms / 60000)
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (h > 0) return `${h} h ${String(m).padStart(2, '0')} min`
+  return `${m} min`
+}
 
 export default function Portal3Carnet() {
   const { pacId } = useParams()
@@ -44,6 +73,7 @@ export default function Portal3Carnet() {
   const [text, setText] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState(null)
+  const elapsed = usePacElapsed(pacId)
 
   if (!pac) return <p className="p-8 font-[var(--font-body)]">PAC introuvable.</p>
   if (!unlocked) {
@@ -117,9 +147,14 @@ export default function Portal3Carnet() {
           />
 
           <div className="px-8 py-7">
-            <button onClick={() => navigate('/plan')} className="text-xs text-ink-muted mb-5 hover:underline">
+          <div className="flex items-center justify-between mb-5">
+            <button onClick={() => navigate('/plan')} className="text-xs text-ink-muted hover:underline">
               ← Retour au plan
             </button>
+            <span className="text-[12px] text-ink-muted">
+              ⏱ {formatElapsed(elapsed)} sur ce PAC · repère indicatif : 3h30
+            </span>
+          </div>
 
             <div className="mb-6">
               <p className="font-[var(--font-script)] text-[32px] leading-none text-accent">Mon carnet de bord</p>
