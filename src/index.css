@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500&family=Caveat:wght@500;600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -10,10 +11,25 @@
   --color-pac4: #b06a1d;
   --color-pac4-bg: #faeeda;
 
+  /* Identité "carnet de bord" — validée le 21/07 */
+  --color-paper: #f4efe3;
+  --color-paper-side: #ece3d0;
+  --color-ink: #2b2620;
+  --color-ink-muted: #6f6656;
+  --color-ink-faint: #a89e88;
+  --color-rule: #d9cfb8;
+  --color-accent: #3f6b4f;
+  --color-accent-bg: #e2e9dc;
+  --color-accent-bg-strong: #d3ddc9;
+
   --font-voice: "Georgia", "Times New Roman", serif;
+  --font-display: "Fraunces", Georgia, serif;
+  --font-script: "Caveat", cursive;
+  --font-body: "Lora", Georgia, serif;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  background-color: #f4f1ea;
+  font-family: var(--font-body);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
