@@ -43,11 +43,27 @@ export async function submitBarnum({ sessionId, answers }) {
   return data.portrait
 }
 
-export async function submitResponse({ sessionId, pacId, situationId, choiceLabel, studentText }) {
+export async function fetchSynthese2({ sessionId, pacId, situationId, choiceLabel, palierBText, reaction1Text }) {
+  return request('/api/synthese2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId, pacId, situationId, choiceLabel, palierBText, reaction1Text }),
+  })
+}
+
+export async function submitResponse({
+  sessionId, pacId, situationId, choiceLabel,
+  palierBText, matchedTendencyId, surpriseText,
+  reaction1Text, synthese2Text, reaction2Text,
+}) {
   return request('/api/respond', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, pacId, situationId, choiceLabel, studentText }),
+    body: JSON.stringify({
+      sessionId, pacId, situationId, choiceLabel,
+      palierBText, matchedTendencyId, surpriseText,
+      reaction1Text, synthese2Text, reaction2Text,
+    }),
   })
 }
 
