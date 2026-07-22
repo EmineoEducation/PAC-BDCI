@@ -1,0 +1,23 @@
+# Dépendances
+node_modules/
+
+# Build
+dist/
+.vercel/
+
+# Variables d'environnement — NE JAMAIS committer (clés Anthropic, Upstash, Resend)
+.env
+.env.local
+.env.*.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / éditeurs
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
