@@ -1,18 +1,18 @@
 import { getSession, saveSession } from './lib/redis.js'
-import { askClaude, askClaudeJSON, MODEL_DEFAULT } from './lib/anthropic.js'
-import {
-  buildClassificationPrompt,
-  buildFeedbackIntermediairePrompt,
-  buildFeedbackFinalPrompt,
-} from './lib/prompts.js'
+import { askClaude, MODEL_DEFAULT } from './lib/anthropic.js'
+import { buildFeedbackIntermediairePrompt, buildFeedbackFinalPrompt } from './lib/prompts.js'
 import { isPacUnlocked, tagMetaPosture } from '../src/lib/progression.js'
 import pacContent from '../src/data/pacContent.json' with { type: 'json' }
 
 // POST /api/respond
-// { sessionId, pacId, situationId, choiceLabel, studentText }
-// Traite une production écrite de palier B : classification vers une branche,
-// surprise de palier C, puis feedback intermédiaire (situation 1) ou feedback
-// final + tag de posture-méta + déblocage du PAC suivant (situation 2).
+// { sessionId, pacId, situationId, choiceLabel, palierBText, matchedTendencyId,
+//   surpriseText, reaction1Text, synthese2Text, reaction2Text }
+//
+// Appelé une seule fois par situation, au moment où reaction2 est soumise (fin du cycle
+// "le monde résiste" — chantier densité temporelle, 21/07). Persiste l'entrée complète
+// (palierB + les deux réactions) et génère le feedback intermédiaire (situation 1) ou
+// final + clôture du PAC (situation 2). matchedTendencyId/surpriseText proviennent de
+// l'appel préalable à /api/synthese2, pas reclassifiés ici.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,17 +22,22 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const { sessionId, pacId, situationId, choiceLabel, studentText } = body || {}
+    const {
+      sessionId, pacId, situationId, choiceLabel,
+      palierBText, matchedTendencyId, surpriseText,
+      reaction1Text, synthese2Text, reaction2Text,
+    } = body || {}
 
-    if (!sessionId || !pacId || !situationId || !studentText) {
-      return res.status(400).json({ error: 'sessionId, pacId, situationId et studentText sont requis.' })
+    if (!sessionId || !pacId || !situationId || !palierBText || !reaction1Text || !reaction2Text) {
+      return res.status(400).json({
+        error: 'sessionId, pacId, situationId, palierBText, reaction1Text et reaction2Text sont requis.',
+      })
     }
 
     const session = await getSession(sessionId)
     if (!session) return res.status(404).json({ error: 'Session introuvable ou expirée.' })
-
     if (!isPacUnlocked(pacId, session.progression.completedPacs)) {
-      return res.status(403).json({ error: 'Ce PAC n\'est pas encore débloqué pour cette session.' })
+      return res.status(403).json({ error: "Ce PAC n'est pas encore débloqué pour cette session." })
     }
 
     const pac = pacContent.pacs.find((p) => p.id === pacId)
@@ -40,55 +45,49 @@ export default async function handler(req, res) {
     const situation = pac.situations.find((s) => s.id === situationId)
     if (!situation) return res.status(404).json({ error: `Situation ${situationId} introuvable.` })
 
-    // 1. Classification vers la branche la plus proche + surprise de palier C.
-    const { system: classifySystem, prompt: classifyPrompt } = buildClassificationPrompt({
-      situationText: situation.palierA.text,
-      choiceLabel,
-      tendencies: situation.palierB.tendencies,
-      studentText,
-    })
-    const classification = await askClaudeJSON({ system: classifySystem, prompt: classifyPrompt, model: MODEL_DEFAULT, maxTokens: 1000 })
-
     const entry = {
       pacId,
       situationId,
       order: situation.order,
       choiceLabel: choiceLabel || null,
-      studentText,
-      matchedTendencyId: classification.matchedTendencyId,
-      offTree: !!classification.offTree,
-      surpriseText: classification.surpriseText,
+      palierBText,
+      matchedTendencyId: matchedTendencyId || null,
+      offTree: matchedTendencyId === 'hors_arbre',
+      surpriseText: surpriseText || null,
+      reaction1Text,
+      synthese2Text: synthese2Text || null,
+      reaction2Text,
       timestamp: new Date().toISOString(),
     }
 
     const result = { entry }
 
-    // 2. Situation 1 → feedback intermédiaire. Situation 2 → feedback final + clôture du PAC.
     if (situation.order === 1) {
       const { system, prompt } = buildFeedbackIntermediairePrompt({
-        situationText: situation.palierA.text,
         palierCText: situation.palierC.text,
-        studentText,
-        surpriseText: classification.surpriseText,
+        reaction1Text,
+        synthese2Text,
+        reaction2Text,
+        surpriseText,
       })
-      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 400 })
+      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 450 })
     } else {
-      const allTextsThisPac = session.entries
-        .filter((e) => e.pacId === pacId)
-        .map((e) => e.studentText)
-        .concat(studentText)
+      const s1Entry = session.entries.find((e) => e.pacId === pacId && e.order === 1)
+      const s1Texts = s1Entry
+        ? `Situation 1 — réaction 1 : ${s1Entry.reaction1Text}\nSituation 1 — rebondissement : ${s1Entry.synthese2Text || '(non disponible)'}\nSituation 1 — réaction 2 : ${s1Entry.reaction2Text}`
+        : '(situation 1 non disponible)'
+      const s2Texts = `Situation 2 — réaction 1 : ${reaction1Text}\nSituation 2 — rebondissement : ${synthese2Text || '(non disponible)'}\nSituation 2 — réaction 2 : ${reaction2Text}`
 
       const { system, prompt } = buildFeedbackFinalPrompt({
         posture: pac.posture,
         anchor: pac.feedbackFinal.anchor,
         notes: pac.feedbackFinal.notes,
         barnumSummary: session.barnumProfile?.text,
-        allStudentTexts: allTextsThisPac,
+        allStudentTexts: [s1Texts, s2Texts],
       })
-      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 500 })
+      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 550 })
 
-      // Tag de posture-méta pour Stabilité/Adaptabilité, basé sur la tendance de situation 2.
-      const tag = tagMetaPosture(pacId, classification.matchedTendencyId, pacContent.metaPostureMapping)
+      const tag = tagMetaPosture(pacId, matchedTendencyId, pacContent.metaPostureMapping)
       if (tag) session.progression.metaPostureTags[pacId] = tag
 
       if (!session.progression.completedPacs.includes(pacId)) {
