@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
 import { isPacUnlocked } from '../lib/progression.js'
-import { submitResponse } from '../lib/api.js'
+import { fetchSynthese2, submitResponse } from '../lib/api.js'
 import pacContent from '../data/pacContent.json'
 
 const COLOR_TEXT = { green: 'text-pac1', blue: 'text-pac2', purple: 'text-pac3', orange: 'text-pac4' }
@@ -17,14 +17,18 @@ const BANNER_BY_PAC = {
   pac4: '/banners/pac4_espace_presse.png',
 }
 
-// Garde-fou anti-soumission vide (permet d'activer le bouton) — pas une contrainte de qualité rédactionnelle.
-const MIN_WORDS_TO_ENABLE_SUBMIT = 20
+// Garde-fous anti-soumission vide (permettent d'activer le bouton) — pas des
+// contraintes de qualité rédactionnelle, cf. uiGuidelines dans pacContent.json.
+const MIN_WORDS_B = 20
+const MIN_WORDS_REACTION1 = 20
+const MIN_WORDS_REACTION2 = 8
+
+const [REACTION1_MIN, REACTION1_MAX] = pacContent.meta.reaction1WordRange
+const [REACTION2_MIN, REACTION2_MAX] = pacContent.meta.reaction2WordRange
 
 // Repère de temps purement indicatif — aucun verrou, juste un rappel du gabarit visé (3h30/PAC).
-// Démarre au premier chargement de ce PAC, persiste en localStorage pour survivre à un rafraîchissement.
 function usePacElapsed(pacId) {
   const [elapsedMs, setElapsedMs] = useState(0)
-
   useEffect(() => {
     const storageKey = `pacbdci_pac_start_${pacId}`
     let start = Number(localStorage.getItem(storageKey))
@@ -37,7 +41,6 @@ function usePacElapsed(pacId) {
     const id = setInterval(tick, 10000)
     return () => clearInterval(id)
   }, [pacId])
-
   return elapsedMs
 }
 
@@ -47,6 +50,11 @@ function formatElapsed(ms) {
   const m = totalMin % 60
   if (h > 0) return `${h} h ${String(m).padStart(2, '0')} min`
   return `${m} min`
+}
+
+function countWords(str) {
+  const t = str.trim()
+  return t ? t.split(/\s+/).length : 0
 }
 
 export default function Portal3Carnet() {
@@ -68,9 +76,17 @@ export default function Portal3Carnet() {
     (s) => !pacEntries.some((e) => e.situationId === s.id)
   )
 
-  const [step, setStep] = useState('A') // 'A' | 'B' | 'done'
+  // Étapes : 'A' (choix) → 'B' (écriture) → 'reaction1' (synthèse 1 affichée + écriture)
+  // → 'reaction2' (synthèse 2 générée + écriture) → 'done' (feedback).
+  const [step, setStep] = useState('A')
   const [choiceLabel, setChoiceLabel] = useState(null)
-  const [text, setText] = useState('')
+  const [palierBText, setPalierBText] = useState('')
+  const [reaction1Text, setReaction1Text] = useState('')
+  const [reaction2Text, setReaction2Text] = useState('')
+  const [synthese2Text, setSynthese2Text] = useState(null)
+  const [matchedTendencyId, setMatchedTendencyId] = useState(null)
+  const [surpriseText, setSurpriseText] = useState(null)
+  const [loadingSynthese2, setLoadingSynthese2] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState(null)
   const elapsed = usePacElapsed(pacId)
@@ -85,9 +101,16 @@ export default function Portal3Carnet() {
     )
   }
 
-  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0
-  const [minWords, maxWords] = activeSituation ? activeSituation.palierB.wordRange : [0, 0]
-  const inRange = wordCount >= minWords && wordCount <= maxWords
+  const wcB = countWords(palierBText)
+  const [minWordsB, maxWordsB] = activeSituation ? activeSituation.palierB.wordRange : [0, 0]
+  const inRangeB = wcB >= minWordsB && wcB <= maxWordsB
+
+  const wcR1 = countWords(reaction1Text)
+  const inRangeR1 = wcR1 >= REACTION1_MIN && wcR1 <= REACTION1_MAX
+
+  const wcR2 = countWords(reaction2Text)
+  const inRangeR2 = wcR2 >= REACTION2_MIN && wcR2 <= REACTION2_MAX
+
   const bridge = activeSituation?.palierA.microChoiceBridges?.[choiceLabel]
 
   function handleChoice(label) {
@@ -95,7 +118,34 @@ export default function Portal3Carnet() {
     setStep('B')
   }
 
-  async function handleSubmit() {
+  function handleSubmitB() {
+    // Synthèse 1 = palierC.text, déjà écrit dans le contenu — aucun appel réseau ici.
+    setStep('reaction1')
+  }
+
+  async function handleSubmitReaction1() {
+    setLoadingSynthese2(true)
+    try {
+      const data = await fetchSynthese2({
+        sessionId: session.id,
+        pacId,
+        situationId: activeSituation.id,
+        choiceLabel,
+        palierBText,
+        reaction1Text,
+      })
+      setSynthese2Text(data.synthese2Text)
+      setMatchedTendencyId(data.matchedTendencyId)
+      setSurpriseText(data.surpriseText)
+      setStep('reaction2')
+    } catch (err) {
+      alert(`Erreur : ${err.message}`)
+    } finally {
+      setLoadingSynthese2(false)
+    }
+  }
+
+  async function handleSubmitReaction2() {
     setSubmitting(true)
     try {
       const result = await submitResponse({
@@ -103,7 +153,12 @@ export default function Portal3Carnet() {
         pacId,
         situationId: activeSituation.id,
         choiceLabel,
-        studentText: text,
+        palierBText,
+        matchedTendencyId,
+        surpriseText,
+        reaction1Text,
+        synthese2Text,
+        reaction2Text,
       })
       setLastResult(result)
       setStep('done')
@@ -130,7 +185,12 @@ export default function Portal3Carnet() {
   function goToNextSituation() {
     setStep('A')
     setChoiceLabel(null)
-    setText('')
+    setPalierBText('')
+    setReaction1Text('')
+    setReaction2Text('')
+    setSynthese2Text(null)
+    setMatchedTendencyId(null)
+    setSurpriseText(null)
     setLastResult(null)
   }
 
@@ -147,14 +207,14 @@ export default function Portal3Carnet() {
           />
 
           <div className="px-8 py-7">
-          <div className="flex items-center justify-between mb-5">
-            <button onClick={() => navigate('/plan')} className="text-xs text-ink-muted hover:underline">
-              ← Retour au plan
-            </button>
-            <span className="text-[12px] text-ink-muted">
-              ⏱ {formatElapsed(elapsed)} sur ce PAC · repère indicatif : 3h30
-            </span>
-          </div>
+            <div className="flex items-center justify-between mb-5">
+              <button onClick={() => navigate('/plan')} className="text-xs text-ink-muted hover:underline">
+                ← Retour au plan
+              </button>
+              <span className="text-[12px] text-ink-muted">
+                ⏱ {formatElapsed(elapsed)} sur ce PAC · repère indicatif : 3h30
+              </span>
+            </div>
 
             <div className="mb-6">
               <p className="font-[var(--font-script)] text-[32px] leading-none text-accent">Mon carnet de bord</p>
@@ -211,7 +271,8 @@ export default function Portal3Carnet() {
                   </p>
                 )}
 
-                {(step === 'B' || step === 'done') && (
+                {/* Palier B — note d'action */}
+                {(step === 'B' || step === 'reaction1' || step === 'reaction2' || step === 'done') && (
                   <div className="mt-7">
                     <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-ink-muted mb-2">
                       Ta réponse
@@ -220,31 +281,106 @@ export default function Portal3Carnet() {
                       {activeSituation.palierB.livrable}
                     </p>
                     <textarea
-                      value={text}
-                      onChange={(e) => setText(e.target.value)}
-                      disabled={step === 'done'}
+                      value={palierBText}
+                      onChange={(e) => setPalierBText(e.target.value)}
+                      disabled={step !== 'B'}
                       placeholder="Écris ta réponse ici…"
                       className="w-full min-h-[170px] border border-rule rounded-[10px] p-4 text-[15.5px] leading-relaxed bg-white/60 focus:outline-none focus:ring-2 focus:ring-pac1/25 focus:border-accent disabled:bg-paper-side disabled:text-ink-muted"
                     />
-                    <div className="flex items-center justify-between mt-3">
-                      <span className={`text-[13px] ${inRange ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
-                        {wordCount} mots · entre {minWords} et {maxWords}
-                      </span>
-                      {step === 'B' && (
+                    {step === 'B' && (
+                      <div className="flex items-center justify-between mt-3">
+                        <span className={`text-[13px] ${inRangeB ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
+                          {wcB} mots · entre {minWordsB} et {maxWordsB}
+                        </span>
                         <button
-                          onClick={handleSubmit}
-                          disabled={submitting || wordCount < MIN_WORDS_TO_ENABLE_SUBMIT}
+                          onClick={handleSubmitB}
+                          disabled={wcB < MIN_WORDS_B}
+                          className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                        >
+                          Envoyer ma réponse
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Synthèse 1 (palier C, affiché tel quel) + Réaction 1 */}
+                {(step === 'reaction1' || step === 'reaction2' || step === 'done') && (
+                  <div className="mt-8">
+                    <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-accent mb-2 pt-5 border-t border-dashed border-rule">
+                      Synthèse 1
+                    </p>
+                    <p className="text-[15.5px] leading-relaxed max-w-[68ch] bg-[#fbf7ee] border-l-[3px] border-pac1 rounded-r-lg px-4 py-3">
+                      {activeSituation.palierC.text}
+                    </p>
+
+                    <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-ink-muted mt-5 mb-2">
+                      Ta réponse
+                    </p>
+                    <textarea
+                      value={reaction1Text}
+                      onChange={(e) => setReaction1Text(e.target.value)}
+                      disabled={step !== 'reaction1'}
+                      placeholder="Écris ta réponse ici…"
+                      className="w-full min-h-[140px] border border-rule rounded-[10px] p-4 text-[15.5px] leading-relaxed bg-white/60 focus:outline-none focus:ring-2 focus:ring-pac1/25 focus:border-accent disabled:bg-paper-side disabled:text-ink-muted"
+                    />
+                    {step === 'reaction1' && (
+                      <div className="flex items-center justify-between mt-3">
+                        <span className={`text-[13px] ${inRangeR1 ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
+                          {wcR1} mots · entre {REACTION1_MIN} et {REACTION1_MAX}
+                        </span>
+                        <button
+                          onClick={handleSubmitReaction1}
+                          disabled={wcR1 < MIN_WORDS_REACTION1 || loadingSynthese2}
+                          className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                        >
+                          {loadingSynthese2 ? 'Envoi...' : 'Envoyer ma réponse'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Synthèse 2 (improvisée) + Réaction 2 */}
+                {(step === 'reaction2' || step === 'done') && (
+                  <div className="mt-8">
+                    <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-accent mb-2 pt-5 border-t border-dashed border-rule">
+                      Synthèse 2
+                    </p>
+                    <p className="text-[15.5px] leading-relaxed max-w-[68ch] bg-[#fbf7ee] border-l-[3px] border-pac1 rounded-r-lg px-4 py-3">
+                      {synthese2Text}
+                    </p>
+
+                    <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-ink-muted mt-5 mb-2">
+                      Ta réponse
+                    </p>
+                    <textarea
+                      value={reaction2Text}
+                      onChange={(e) => setReaction2Text(e.target.value)}
+                      disabled={step !== 'reaction2'}
+                      placeholder="Écris ta réponse ici…"
+                      className="w-full min-h-[90px] border border-rule rounded-[10px] p-4 text-[15.5px] leading-relaxed bg-white/60 focus:outline-none focus:ring-2 focus:ring-pac1/25 focus:border-accent disabled:bg-paper-side disabled:text-ink-muted"
+                    />
+                    {step === 'reaction2' && (
+                      <div className="flex items-center justify-between mt-3">
+                        <span className={`text-[13px] ${inRangeR2 ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
+                          {wcR2} mots · entre {REACTION2_MIN} et {REACTION2_MAX}
+                        </span>
+                        <button
+                          onClick={handleSubmitReaction2}
+                          disabled={wcR2 < MIN_WORDS_REACTION2 || submitting}
                           className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {submitting ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
+                {/* Retour */}
                 {step === 'done' && lastResult && (
-                  <div className="flex gap-4 items-start bg-accent-bg border border-accent-bg-strong rounded-[10px] p-5 mt-7">
+                  <div className="flex gap-4 items-start bg-accent-bg border border-accent-bg-strong rounded-[10px] p-5 mt-8">
                     <FeedbackIcon />
                     <div>
                       <p className="text-[15px] leading-relaxed">
@@ -292,7 +428,6 @@ function ChoiceStep({ situation, onChoose }) {
       </div>
     )
   }
-  // Filet de sécurité si un contenu futur revient au format description libre sans options.
   return (
     <div className="mt-4">
       <p className="text-[15px] text-ink-muted italic mb-3">{situation.palierA.microChoiceDescription}</p>
