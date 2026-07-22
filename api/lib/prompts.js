@@ -17,6 +17,7 @@ CE QUE TU NE FAIS JAMAIS :
 - Tu ne cites jamais le nom d'une dimension psychométrique ou d'une "tendance".
 - Tu n'utilises aucun vocabulaire évaluatif (bien/mal, bon/mauvais choix).
 - Tu ne notes jamais, tu ne donnes jamais de score visible.
+- Tu n'analyses jamais le style, la grammaire ou la syntaxe de ce qui a été écrit — uniquement le contenu de la décision.
 
 VOCABULAIRE À PRIVILÉGIER : "Face à [situation], tu as choisi de...", "Cette décision a entraîné...", "Dans ce contexte précis...", "Qu'est-ce qui a pesé dans ce choix ?"
 VOCABULAIRE À BANNIR : "Tu es quelqu'un de...", "Ton profil montre que...", toute étiquette de trait (anxieux, autoritaire, impulsif, conflictuel...).
@@ -50,20 +51,40 @@ Réponds avec ce JSON exact :
   }
 }
 
-export function buildFeedbackIntermediairePrompt({ situationText, palierCText, studentText, surpriseText }) {
+// Cycle "le monde résiste" (chantier densité temporelle, 21/07) : après palierB, la
+// Synthèse 1 (palierC) est affichée telle quelle à l'étudiant·e — jamais générée, c'est
+// le texte déjà écrit. Réaction 1 est ensuite écrite par l'étudiant·e, puis CE prompt
+// improvise la Synthèse 2 : jamais pré-écrite, jamais un feedback évaluatif — une pure
+// continuité de fiction, dans la voix du personnage, cohérente avec la tendance déjà
+// observée en palierB.
+export function buildSynthese2Prompt({ situationText, palierCText, tendencyLabel, reaction1Text, character }) {
+  return {
+    system: `Tu écris la suite d'une scène de fiction professionnelle (Festival Hémisphères) — jamais un feedback évaluatif, jamais un commentaire sur la qualité de ce qui a été écrit. Tu restes strictement dans la voix du personnage concerné (${character}). Réponds uniquement par le texte de la scène (2 à 4 phrases), sans préambule, sans balise, sans guillemets englobants.`,
+    prompt: `Situation initiale : ${situationText}
+Ce qui vient de se passer : ${palierCText}
+Tendance de décision déjà observée chez l'étudiant sur cette situation : ${tendencyLabel}
+Ce que l'étudiant vient d'écrire en réponse : """${reaction1Text}"""
+
+Écris la suite de la scène : comment ${character} réagit à cette réponse, de façon cohérente avec la tendance déjà observée, en ouvrant sur une nouvelle petite pression ou question qui appelle une dernière décision rapide.`,
+  }
+}
+
+export function buildFeedbackIntermediairePrompt({ palierCText, reaction1Text, synthese2Text, reaction2Text, surpriseText }) {
   return {
     system: FEEDBACK_SYSTEM_PROMPT,
     prompt: `Structure attendue (4 points, en prose fluide, pas de liste à puces visible pour l'étudiant) :
-1. Rappel factuel de la situation non résolue (palier C).
-2. Description neutre de la décision/production observée.
+1. Rappel factuel de la situation non résolue (Synthèse 1 / palier C).
+2. Description neutre de la décision observée — en t'appuyant sur les DEUX réactions de l'étudiant (Réaction 1 puis Réaction 2), pas seulement la première.
 3. Conséquence factuelle dans la fiction (ce qui s'est passé, pas ce que "ça dit").
-4. Une question réflexive ouverte.
+4. Une question réflexive ouverte — qui peut porter sur la façon dont la position a tenu ou évolué entre les deux réactions.
 
-Situation (palier C) : ${palierCText}
-Ce que l'étudiant a écrit : """${studentText}"""
-Conséquence déclenchée : ${surpriseText}
+Situation (Synthèse 1) : ${palierCText}
+Réaction 1 de l'étudiant : """${reaction1Text}"""
+Rebondissement qui a suivi (Synthèse 2) : ${synthese2Text || '(non disponible)'}
+Réaction 2 de l'étudiant : """${reaction2Text}"""
+Conséquence de la tendance initiale (palier B) : ${surpriseText || '(non disponible)'}
 
-Rédige le feedback intermédiaire (120-180 mots).`,
+Rédige le feedback intermédiaire (150-220 mots).`,
   }
 }
 
@@ -71,7 +92,7 @@ export function buildFeedbackFinalPrompt({ posture, anchor, notes, barnumSummary
   return {
     system: FEEDBACK_SYSTEM_PROMPT,
     prompt: `Structure attendue (3 points) :
-1. Signature de posture du PAC (pattern observé sur les 2 situations, en langage courant, jamais en nom de dimension).
+1. Signature de posture du PAC (pattern observé sur les 2 situations, chacune vécue en deux réactions successives, en langage courant, jamais en nom de dimension).
 2. Écart avec le portrait d'entrée Barnum — nuance sans démolir l'effet Barnum initial (l'étudiant doit se reconnaître dans les deux portraits, même s'ils divergent).
 3. Question réflexive à emporter en entreprise (ouverte, non refermée par toi).
 
@@ -79,9 +100,12 @@ Posture du PAC : ${posture}
 Point d'ancrage attendu : ${anchor}
 Notes de calibrage : ${notes}
 Résumé du portrait d'entrée (Barnum) : ${barnumSummary || '(non disponible)'}
-Productions écrites de l'étudiant sur ce PAC : """${allStudentTexts.join('\n---\n')}"""
+Productions écrites de l'étudiant sur ce PAC (situation 1 puis situation 2, chacune en deux réactions) :
+"""
+${allStudentTexts.join('\n---\n')}
+"""
 
-Rédige le feedback final + synthèse (180-250 mots).`,
+Rédige le feedback final + synthèse (180-260 mots).`,
   }
 }
 
