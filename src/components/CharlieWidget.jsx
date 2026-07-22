@@ -1,6 +1,40 @@
 import { useEffect, useRef, useState } from 'react'
 import { fetchCharlieHistory, sendCharlieMessage } from '../lib/api.js'
 
+// Repli propre si /charlie/avatar.png n'est pas (encore) déployé dans public/ —
+// évite l'icône d'image cassée du navigateur tant que l'illustration finale
+// n'a pas été fournie.
+function CharlieAvatar({ className }) {
+  const [broken, setBroken] = useState(false)
+  if (broken) {
+    return (
+      <div className={`${className} bg-accent flex items-center justify-center text-[var(--color-paper)] font-semibold`}>
+        C
+      </div>
+    )
+  }
+  return (
+    <img
+      src="/charlie/avatar.png"
+      alt="Charlie"
+      className={`${className} object-cover`}
+      onError={() => setBroken(true)}
+    />
+  )
+}
+
+// Le buste n'est que décoratif (écran d'accueil du chat) — s'il manque, on
+// masque simplement l'image plutôt que d'afficher une icône cassée.
+function CharlieBust() {
+  const [broken, setBroken] = useState(false)
+  if (broken) return null
+  return (
+    <div className="flex justify-center pb-1">
+      <img src="/charlie/bust.png" alt="Charlie" className="w-32 h-auto" onError={() => setBroken(true)} />
+    </div>
+  )
+}
+
 // Charlie n'existe que sur la carte (Portail 2) — jamais pendant l'écriture des
 // paliers, jamais dans le carnet de bord (cf. PAC_BDCI, chantier UX 20/07).
 export default function CharlieWidget({ sessionId }) {
@@ -48,17 +82,13 @@ export default function CharlieWidget({ sessionId }) {
       {open && (
         <div className="w-80 h-96 bg-paper border border-rule rounded-xl shadow-xl flex flex-col mb-3 overflow-hidden">
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-rule bg-paper-side shrink-0">
-            <img src="/charlie/avatar.png" alt="" className="w-7 h-7 rounded-full object-cover" />
+            <CharlieAvatar className="w-7 h-7 rounded-full" />
             <p className="text-[13.5px] font-semibold">Charlie · coordination générale</p>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
             {!loaded && <p className="text-[13px] text-ink-muted italic">Un instant...</p>}
-            {loaded && history.length <= 1 && (
-              <div className="flex justify-center pb-1">
-                <img src="/charlie/bust.png" alt="Charlie" className="w-32 h-auto" />
-              </div>
-            )}
+            {loaded && history.length <= 1 && <CharlieBust />}
             {history.map((m, i) => (
               <div key={i} className={`text-[14px] leading-relaxed ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <span
@@ -99,7 +129,7 @@ export default function CharlieWidget({ sessionId }) {
         {open ? (
           <span className="flex items-center justify-center w-full h-full text-[var(--color-paper)] text-2xl">×</span>
         ) : (
-          <img src="/charlie/avatar.png" alt="Charlie" className="w-full h-full object-cover" />
+          <CharlieAvatar className="w-full h-full" />
         )}
       </button>
     </div>
