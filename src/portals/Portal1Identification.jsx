@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { createSession } from '../lib/api.js'
 import { useSession } from '../lib/SessionContext.jsx'
@@ -7,10 +7,28 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function Portal1Identification() {
   const navigate = useNavigate()
-  const { setSession } = useSession()
+  const { session, setSession, loading } = useSession()
   const [form, setForm] = useState({ nom: '', prenom: '', email: '', formation: '', campus: '' })
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
+
+  // Une session valide existe déjà (ex. retour le lendemain — le parcours se
+  // déroule sur 2 jours, cf. dayMapping) : on reprend là où l'étudiant·e s'est
+  // arrêté·e au lieu de le laisser recréer une session vierge via ce
+  // formulaire, ce qui écraserait le portrait Barnum et les PAC déjà validés.
+  useEffect(() => {
+    if (!loading && session) {
+      navigate(session.barnumProfile ? '/plan' : '/barnum', { replace: true })
+    }
+  }, [loading, session, navigate])
+
+  if (loading || session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-[var(--font-body)]">
+        <p className="text-sm text-ink-muted">Un instant...</p>
+      </div>
+    )
+  }
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }))
@@ -29,10 +47,10 @@ export default function Portal1Identification() {
     }
     setSubmitting(true)
     try {
-      const session = await createSession(form)
-      setSession(session)
+      const newSession = await createSession(form)
+      setSession(newSession)
       // Le portrait Barnum n'est déclenché qu'une seule fois, à la toute première session.
-      navigate(session.barnumProfile ? '/plan' : '/barnum')
+      navigate(newSession.barnumProfile ? '/plan' : '/barnum')
     } catch (err) {
       setError(err.message)
     } finally {

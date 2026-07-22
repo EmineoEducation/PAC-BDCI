@@ -57,6 +57,39 @@ function countWords(str) {
   return t ? t.split(/\s+/).length : 0
 }
 
+// Brouillon local (localStorage) — rien n'est persisté côté serveur avant
+// l'envoi de la réaction 2 (cf. handleSubmitReaction2). Sans ça, une coupure
+// réseau, une mise en veille ou une fermeture accidentelle de l'onglet en
+// cours de situation fait perdre tout le travail déjà écrit.
+function draftStorageKey(pacId, situationId) {
+  return `pacbdci_draft_${pacId}_${situationId}`
+}
+
+function loadDraft(pacId, situationId) {
+  try {
+    const raw = localStorage.getItem(draftStorageKey(pacId, situationId))
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(pacId, situationId, draft) {
+  try {
+    localStorage.setItem(draftStorageKey(pacId, situationId), JSON.stringify(draft))
+  } catch {
+    // Stockage plein/indisponible (navigation privée, etc.) — on continue sans bloquer la saisie.
+  }
+}
+
+function clearDraft(pacId, situationId) {
+  try {
+    localStorage.removeItem(draftStorageKey(pacId, situationId))
+  } catch {
+    // rien à faire
+  }
+}
+
 export default function Portal3Carnet() {
   const { pacId } = useParams()
   const navigate = useNavigate()
@@ -89,7 +122,43 @@ export default function Portal3Carnet() {
   const [loadingSynthese2, setLoadingSynthese2] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState(null)
+  const [draftRestored, setDraftRestored] = useState(false)
   const elapsed = usePacElapsed(pacId)
+
+  // Restauration d'un éventuel brouillon local à l'arrivée sur une situation.
+  useEffect(() => {
+    setDraftRestored(false)
+    if (!activeSituation) return
+    const draft = loadDraft(pacId, activeSituation.id)
+    if (draft) {
+      setStep(draft.step || 'A')
+      setChoiceLabel(draft.choiceLabel ?? null)
+      setPalierBText(draft.palierBText || '')
+      setReaction1Text(draft.reaction1Text || '')
+      setReaction2Text(draft.reaction2Text || '')
+      setSynthese2Text(draft.synthese2Text ?? null)
+      setMatchedTendencyId(draft.matchedTendencyId ?? null)
+      setSurpriseText(draft.surpriseText ?? null)
+    }
+    setDraftRestored(true)
+  }, [pacId, activeSituation?.id])
+
+  // Sauvegarde continue (anti-rebond) du brouillon en cours, tant qu'il n'a
+  // pas encore été transmis au serveur via handleSubmitReaction2.
+  useEffect(() => {
+    if (!activeSituation || !draftRestored) return
+    if (step === 'A' && !palierBText && !reaction1Text && !reaction2Text) return
+    const timeout = setTimeout(() => {
+      saveDraft(pacId, activeSituation.id, {
+        step, choiceLabel, palierBText, reaction1Text, reaction2Text,
+        synthese2Text, matchedTendencyId, surpriseText,
+      })
+    }, 400)
+    return () => clearTimeout(timeout)
+  }, [
+    pacId, activeSituation?.id, draftRestored, step, choiceLabel,
+    palierBText, reaction1Text, reaction2Text, synthese2Text, matchedTendencyId, surpriseText,
+  ])
 
   if (!pac) return <p className="p-8 font-[var(--font-body)]">PAC introuvable.</p>
   if (!unlocked) {
@@ -162,6 +231,7 @@ export default function Portal3Carnet() {
       })
       setLastResult(result)
       setStep('done')
+      clearDraft(pacId, activeSituation.id)
 
       if (result.pacCompleted) {
         setSession({
@@ -413,26 +483,33 @@ export default function Portal3Carnet() {
 
 function ChoiceStep({ situation, onChoose }) {
   const options = situation.palierA.microChoiceOptions
+  const description = situation.palierA.microChoiceDescription
+
   if (options && options.length) {
     return (
-      <div className="flex flex-col gap-2 mt-4">
-        {options.map((opt) => (
-          <button
-            key={opt}
-            onClick={() => onChoose(opt)}
-            className="text-left text-[15px] border border-rule rounded-[10px] px-4 py-2.5 hover:border-accent hover:bg-accent-bg/40 transition-colors"
-          >
-            {opt}
-          </button>
-        ))}
+      <div className="mt-4">
+        {description && (
+          <p className="text-[15px] text-ink-muted italic mb-3">{description}</p>
+        )}
+        <div className="flex flex-col gap-2">
+          {options.map((opt) => (
+            <button
+              key={opt}
+              onClick={() => onChoose(opt)}
+              className="text-left text-[15px] border border-rule rounded-[10px] px-4 py-2.5 hover:border-accent hover:bg-accent-bg/40 transition-colors"
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
       </div>
     )
   }
   return (
     <div className="mt-4">
-      <p className="text-[15px] text-ink-muted italic mb-3">{situation.palierA.microChoiceDescription}</p>
+      <p className="text-[15px] text-ink-muted italic mb-3">{description}</p>
       <button
-        onClick={() => onChoose(situation.palierA.microChoiceDescription)}
+        onClick={() => onChoose(description)}
         className="text-[14.5px] bg-accent text-[var(--color-paper)] px-4 py-2 rounded-[10px]"
       >
         Continuer
