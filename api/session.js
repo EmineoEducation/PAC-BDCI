@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto'
 import { getSession, saveSession } from '../lib/redis.js'
 
+// Validation serveur (la validation client de Portal1 est contournable).
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 // POST /api/session         → crée une nouvelle session (portail 1)
 // GET  /api/session?id=xxx  → relit une session existante (retour du plan/carnet)
 
@@ -12,6 +15,9 @@ export default async function handler(req, res) {
 
       if (!nom || !prenom || !email || !formation || !campus) {
         return res.status(400).json({ error: 'nom, prenom, email, formation et campus sont requis.' })
+      }
+      if (!EMAIL_RE.test(String(email))) {
+        return res.status(400).json({ error: 'Adresse mail invalide.' })
       }
 
       const id = randomUUID()

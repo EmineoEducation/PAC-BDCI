@@ -16,8 +16,18 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
     const { sessionId, answers } = body || {}
 
-    if (!sessionId || !answers) {
+    if (!sessionId || !answers || typeof answers !== 'object') {
       return res.status(400).json({ error: 'sessionId et answers sont requis.' })
+    }
+
+    // Vérifie que chaque item du questionnaire a bien une réponse : un answers
+    // partiel produirait un portrait bancal sans lever d'erreur. On liste les
+    // manquants pour faciliter le diagnostic côté client.
+    const missing = BARNUM_QUESTIONS.filter((q) => answers[q.id] === undefined).map((q) => q.id)
+    if (missing.length > 0) {
+      return res.status(400).json({
+        error: `Réponses incomplètes : ${missing.length} item(s) manquant(s) sur ${BARNUM_QUESTIONS.length}.`,
+      })
     }
 
     const session = await getSession(sessionId)

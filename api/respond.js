@@ -96,7 +96,18 @@ export default async function handler(req, res) {
       result.pacCompleted = true
     }
 
-    session.entries.push(entry)
+    // Idempotence : si une entrée existe déjà pour ce (pacId, situationId)
+    // — double-clic, ré-POST après timeout, retour arrière — on la remplace
+    // au lieu d'en empiler une seconde (sinon le bilan/PDF compterait deux
+    // fois la même production, et entries.find(order===1) deviendrait ambigu).
+    const existingIndex = session.entries.findIndex(
+      (e) => e.pacId === pacId && e.situationId === situationId
+    )
+    if (existingIndex !== -1) {
+      session.entries[existingIndex] = entry
+    } else {
+      session.entries.push(entry)
+    }
     await saveSession(sessionId, session)
 
     return res.status(200).json(result)

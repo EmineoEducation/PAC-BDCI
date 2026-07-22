@@ -12,6 +12,24 @@ import { askClaudeConversation, MODEL_CHARLIE } from '../lib/anthropic.js'
 const CHARLIE_INTRO =
   "Salut, moi c'est Charlie — je coordonne les équipes volantes ici. Besoin d'un coup de main pour t'orienter sur le festival, ou juste discuter deux minutes ? Je suis là."
 
+// L'historique complet est STOCKÉ et affiché à l'étudiant·e, mais on n'envoie
+// à l'API que les derniers messages : la conversation vit toute la journée
+// (2 × 3h30), et renvoyer l'intégralité à chaque tour ferait gonfler coût,
+// latence et risque de dépassement de fenêtre. On garde toujours le tout
+// premier message (l'intro de Charlie) pour ancrer le personnage, puis les
+// N derniers échanges.
+const CHARLIE_HISTORY_WINDOW = 20
+
+function windowedHistory(history) {
+  if (history.length <= CHARLIE_HISTORY_WINDOW) {
+    return history.map(({ role, content }) => ({ role, content }))
+  }
+  const intro = history[0]
+  const tail = history.slice(-CHARLIE_HISTORY_WINDOW)
+  const merged = tail[0] === intro ? tail : [intro, ...tail]
+  return merged.map(({ role, content }) => ({ role, content }))
+}
+
 const CHARLIE_SYSTEM_PROMPT = `Tu es Charlie, coordinateur·rice général·e des équipes volantes au Festival Hémisphères (friche industrielle réhabilitée, 3ᵉ édition). Tu es le point de contact pour les volant·es — les étudiant·es qui coordonnent sur le terrain — quand ils/elles circulent sur la carte du festival entre deux missions.
 
 RÈGLES ABSOLUES, à ne jamais enfreindre :
@@ -56,7 +74,7 @@ export default async function handler(req, res) {
 
       const reply = await askClaudeConversation({
         system: CHARLIE_SYSTEM_PROMPT,
-        messages: session.charlieHistory.map(({ role, content }) => ({ role, content })),
+        messages: windowedHistory(session.charlieHistory),
         model: MODEL_CHARLIE,
         maxTokens: 300,
       })
