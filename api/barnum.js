@@ -1,6 +1,6 @@
-import { getSession, saveSession } from './lib/redis.js'
-import { askClaude, MODEL_DEFAULT } from './lib/anthropic.js'
-import { buildBarnumPortraitPrompt } from './lib/prompts.js'
+import { getSession, saveSession } from '../lib/redis.js'
+import { askClaude, MODEL_DEFAULT } from '../lib/anthropic.js'
+import { buildBarnumPortraitPrompt } from '../lib/prompts.js'
 import { BARNUM_QUESTIONS } from '../src/data/barnumQuestions.js'
 
 // POST /api/barnum  { sessionId, answers }

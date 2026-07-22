@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto'
-import { getSession, saveSession } from './lib/redis.js'
+import { getSession, saveSession } from '../lib/redis.js'
 
 // POST /api/session         → crée une nouvelle session (portail 1)
 // GET  /api/session?id=xxx  → relit une session existante (retour du plan/carnet)

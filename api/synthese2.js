@@ -1,6 +1,6 @@
-import { getSession } from './lib/redis.js'
-import { askClaude, askClaudeJSON, MODEL_DEFAULT } from './lib/anthropic.js'
-import { buildClassificationPrompt, buildSynthese2Prompt } from './lib/prompts.js'
+import { getSession } from '../lib/redis.js'
+import { askClaude, askClaudeJSON, MODEL_DEFAULT } from '../lib/anthropic.js'
+import { buildClassificationPrompt, buildSynthese2Prompt } from '../lib/prompts.js'
 import { isPacUnlocked } from '../src/lib/progression.js'
 import pacContent from '../src/data/pacContent.json' with { type: 'json' }
 

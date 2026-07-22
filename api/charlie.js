@@ -1,5 +1,5 @@
-import { getSession, saveSession } from './lib/redis.js'
-import { askClaudeConversation, MODEL_CHARLIE } from './lib/anthropic.js'
+import { getSession, saveSession } from '../lib/redis.js'
+import { askClaudeConversation, MODEL_CHARLIE } from '../lib/anthropic.js'
 
 // GET  /api/charlie?sessionId=xxx        → relit l'historique (initialise l'intro si première fois)
 // POST /api/charlie { sessionId, message } → envoie un message, reçoit la réponse de Charlie

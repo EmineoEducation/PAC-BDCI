@@ -1,6 +1,6 @@
-import { getSession, saveSession } from './lib/redis.js'
-import { askClaude, MODEL_DEFAULT } from './lib/anthropic.js'
-import { buildFeedbackIntermediairePrompt, buildFeedbackFinalPrompt } from './lib/prompts.js'
+import { getSession, saveSession } from '../lib/redis.js'
+import { askClaude, MODEL_DEFAULT } from '../lib/anthropic.js'
+import { buildFeedbackIntermediairePrompt, buildFeedbackFinalPrompt } from '../lib/prompts.js'
 import { isPacUnlocked, tagMetaPosture } from '../src/lib/progression.js'
 import pacContent from '../src/data/pacContent.json' with { type: 'json' }
 
