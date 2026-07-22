@@ -13,6 +13,8 @@
     "model": "claude-sonnet-5",
     "modelOptionFinalSynthesis": "claude-opus-4-8",
     "defaultWordRange": [250, 400],
+    "reaction1WordRange": [40, 100],
+    "reaction2WordRange": [15, 50],
     "dayMapping": {
       "jour1_matin": "pac1",
       "jour1_apresmidi": "pac2",
