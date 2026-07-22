@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { BARNUM_QUESTIONS, DIMENSIONS_ORDER, DIMENSION_META, LIKERT_SCALE, LIKERT_ENDPOINT_LABELS } from '../data/barnumQuestions.js'
+import { BARNUM_QUESTIONS, DIMENSIONS_ORDER, NEUTRAL_STEP_META, LIKERT_SCALE, LIKERT_ENDPOINT_LABELS } from '../data/barnumQuestions.js'
 import { submitBarnum } from '../lib/api.js'
 import { useSession } from '../lib/SessionContext.jsx'
 
@@ -12,7 +12,8 @@ export default function BarnumQuestionnaire() {
   const [submitting, setSubmitting] = useState(false)
 
   const dimension = DIMENSIONS_ORDER[step]
-  const meta = DIMENSION_META[dimension]
+  // Intitulé NEUTRE, identique à chaque étape : ne révèle jamais l'axe mesuré.
+  const meta = NEUTRAL_STEP_META
   const questions = useMemo(
     () => BARNUM_QUESTIONS.filter((q) => q.dimension === dimension),
     [dimension]
@@ -56,11 +57,11 @@ export default function BarnumQuestionnaire() {
       <div className="h-[3px] bg-neutral-200 rounded-full mb-8">
         <div
           className="h-full bg-pac3 rounded-full transition-all"
-          style={{ width: `${(step / DIMENSIONS_ORDER.length) * 100}%` }}
+          style={{ width: `${((step + 1) / DIMENSIONS_ORDER.length) * 100}%` }}
         />
       </div>
 
-      <p className="text-xs font-medium tracking-wide uppercase text-pac3 mb-1">Dimension {step + 1} / 6</p>
+      <p className="text-xs font-medium tracking-wide uppercase text-pac3 mb-1">Partie {step + 1} / 6</p>
       <h2 className="text-lg font-medium mb-1">{meta.title}</h2>
       <p className="text-sm text-neutral-500 mb-6">{meta.desc}</p>
 

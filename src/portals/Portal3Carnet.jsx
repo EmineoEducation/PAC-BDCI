@@ -233,17 +233,30 @@ export default function Portal3Carnet() {
       setStep('done')
       clearDraft(pacId, activeSituation.id)
 
+      // Remplace l'entrée existante (même pacId+situationId) si elle existe,
+      // sinon l'ajoute — miroir de l'idempotence serveur (évite les doublons
+      // qui fausseraient le compteur et le bilan).
+      const dedupedEntries = [
+        ...session.entries.filter(
+          (e) => !(e.pacId === pacId && e.situationId === activeSituation.id)
+        ),
+        result.entry,
+      ]
+
       if (result.pacCompleted) {
+        const dedupedPacs = session.progression.completedPacs.includes(pacId)
+          ? session.progression.completedPacs
+          : [...session.progression.completedPacs, pacId]
         setSession({
           ...session,
-          entries: [...session.entries, result.entry],
+          entries: dedupedEntries,
           progression: {
             ...session.progression,
-            completedPacs: [...session.progression.completedPacs, pacId],
+            completedPacs: dedupedPacs,
           },
         })
       } else {
-        setSession({ ...session, entries: [...session.entries, result.entry] })
+        setSession({ ...session, entries: dedupedEntries })
       }
     } catch (err) {
       alert(`Erreur : ${err.message}`)
