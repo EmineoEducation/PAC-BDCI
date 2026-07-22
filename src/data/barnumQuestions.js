@@ -18,6 +18,11 @@ export const DIMENSIONS_ORDER = [
   'visibilite_discretion',
 ]
 
+// DIMENSION_META : usage INTERNE uniquement (jamais affiché à l'étudiant).
+// Les noms de dimension et leurs descriptions révèlent l'axe mesuré, ce qui
+// contredit le principe fondateur du dispositif (« ne jamais nommer les
+// dimensions à l'étudiant », grille de calibrage §2.1). Conservé ici pour la
+// lisibilité du code / le back-office, mais NE PLUS l'afficher côté étudiant.
 export const DIMENSION_META = {
   cadre_autonomie: { title: 'Cadre & autonomie', desc: 'Comment vous situez-vous face aux consignes et à la marge de manœuvre ?' },
   action_reflexion: { title: 'Action & réflexion', desc: 'Comment entrez-vous dans l\'action quand il faut démarrer ?' },
@@ -25,6 +30,15 @@ export const DIMENSION_META = {
   stabilite_adaptabilite: { title: 'Stabilité & adaptabilité', desc: 'Comment réagissez-vous quand la situation échappe à votre contrôle ?' },
   relation_autonomie: { title: 'Relation & autonomie', desc: 'Comment vous situez-vous entre coopération et travail en solo ?' },
   visibilite_discretion: { title: 'Visibilité & discrétion', desc: 'Comment vous positionnez-vous par rapport à l\'exposition de votre travail ?' },
+}
+
+// Intitulés NEUTRES effectivement affichés à l'étudiant, dans l'ordre de
+// DIMENSIONS_ORDER. Ils ne révèlent aucun axe mesuré : l'étudiant répond
+// spontanément sans savoir ce qui est observé (condition de l'effet Barnum
+// et de l'observation non biaisée). L'accroche reste générale et invariante.
+export const NEUTRAL_STEP_META = {
+  title: 'Ta manière de travailler',
+  desc: 'Réponds spontanément, comme tu te vois vraiment — il n\'y a pas de bonne ou de mauvaise réponse.',
 }
 
 export const BARNUM_QUESTIONS = [
