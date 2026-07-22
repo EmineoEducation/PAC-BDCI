@@ -15,9 +15,14 @@ export function nextPacToUnlock(completedPacs = []) {
   return PAC_ORDER.find((id) => !completedPacs.includes(id)) || null
 }
 
+// Aligné sur pacContent.json > meta.cumulRules :
+//   1 PAC        → portrait_de_posture
+//   2 ou 3 PAC   → portrait_partiel
+//   4 PAC        → bilan_complet
 export function cumulLevel(completedPacs = []) {
   const n = completedPacs.length
   if (n === 0) return 'aucun'
+  if (n === 1) return 'portrait_de_posture'
   if (n >= 4) return 'bilan_complet'
   return 'portrait_partiel'
 }
