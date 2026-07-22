@@ -1,0 +1,20 @@
+{
+  "name": "PAC BDCI — Festival Hémisphères",
+  "short_name": "PAC BDCI",
+  "description": "Bilan de compétences interne du Festival Hémisphères : Portrait Barnum d'entrée, 4 PAC (S'engager / Agir / Négocier / Recevoir), feedback IA en temps réel.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f4efe3",
+  "theme_color": "#3f6b4f",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
