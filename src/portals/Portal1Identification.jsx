@@ -72,7 +72,7 @@ export default function Portal1Identification() {
           <Field label="Prénom" value={form.prenom} onChange={(v) => update('prenom', v)} />
           <Field label="Mail" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="prenom.nom@emineo.fr" />
           <Field label="Formation" value={form.formation} onChange={(v) => update('formation', v)} placeholder="ex. MSMC" />
-          <Field label="Campus" value={form.campus} onChange={(v) => update('campus', v)} placeholder="ex. LYO" />
+          <Field label="Campus" value={form.campus} onChange={(v) => update('campus', v)} placeholder="ex. Bordeaux" />
         </div>
 
         {error && <p className="text-sm text-red-600 mt-4">{error}</p>}

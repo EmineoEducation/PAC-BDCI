@@ -20,11 +20,14 @@ const BANNER_BY_PAC = {
   pac4: '/banners/pac4_espace_presse.png',
 }
 
-// Garde-fous anti-soumission vide (permettent d'activer le bouton) — pas des
-// contraintes de qualité rédactionnelle, cf. uiGuidelines dans pacContent.json.
-const MIN_WORDS_B = 20
-const MIN_WORDS_REACTION1 = 20
-const MIN_WORDS_REACTION2 = 8
+// Le bouton d'envoi ne s'active qu'à partir du MINIMUM AFFICHÉ de chaque
+// fourchette (« entre X et Y mots ») : l'interface annonçait ces bornes
+// mais acceptait l'envoi bien en dessous, ce qui rendait la consigne
+// illisible. Le maximum reste indicatif (dépasser de quelques mots ne
+// bloque pas — seule l'insuffisance bloque).
+// NB : choix pédagogique inverse possible (bornes purement indicatives) —
+// il suffirait alors de réafficher « repère : X-Y mots » et de rétablir un
+// simple garde-fou anti-vide ici.
 
 const [REACTION1_MIN, REACTION1_MAX] = pacContent.meta.reaction1WordRange
 const [REACTION2_MIN, REACTION2_MAX] = pacContent.meta.reaction2WordRange
@@ -413,7 +416,7 @@ export default function Portal3Carnet() {
                         </span>
                         <button
                           onClick={handleSubmitB}
-                          disabled={wcB < MIN_WORDS_B}
+                          disabled={wcB < minWordsB}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           Envoyer ma réponse
@@ -450,7 +453,7 @@ export default function Portal3Carnet() {
                         </span>
                         <button
                           onClick={handleSubmitReaction1}
-                          disabled={wcR1 < MIN_WORDS_REACTION1 || loadingSynthese2}
+                          disabled={wcR1 < REACTION1_MIN || loadingSynthese2}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {loadingSynthese2 ? 'Envoi...' : 'Envoyer ma réponse'}
@@ -487,7 +490,7 @@ export default function Portal3Carnet() {
                         </span>
                         <button
                           onClick={handleSubmitReaction2}
-                          disabled={wcR2 < MIN_WORDS_REACTION2 || submitting}
+                          disabled={wcR2 < REACTION2_MIN || submitting}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {submitting ? 'Envoi...' : 'Envoyer ma réponse'}
