@@ -6,7 +6,8 @@ const PAC_ORDER = ['pac1', 'pac2', 'pac3', 'pac4']
 
 export function isPacUnlocked(pacId, completedPacs = []) {
   const index = PAC_ORDER.indexOf(pacId)
-  if (index <= 0) return true // pac1 toujours accessible dès le portrait Barnum passé
+  if (index === -1) return false // pacId inconnu : jamais débloqué
+  if (index === 0) return true // pac1 toujours accessible dès le portrait Barnum passé
   const previousPac = PAC_ORDER[index - 1]
   return completedPacs.includes(previousPac)
 }
@@ -31,6 +32,8 @@ export function cumulLevel(completedPacs = []) {
 // observée en situation 2 de chaque PAC — voir metaPostureMapping dans pacContent.json.
 export function tagMetaPosture(pacId, tendencyId, metaPostureMapping) {
   for (const [posture, mapping] of Object.entries(metaPostureMapping)) {
+    // La clé "note" du mapping est une chaîne documentaire, pas une posture.
+    if (typeof mapping !== 'object' || mapping === null) continue
     if (mapping[pacId] === tendencyId) return posture
   }
   return null
