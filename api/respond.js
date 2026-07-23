@@ -70,7 +70,10 @@ export default async function handler(req, res) {
         reaction2Text,
         surpriseText,
       })
-      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 450 })
+      // 900 tokens : marge confortable pour un feedback multi-sections en
+      // français (~600-650 mots max). La limite précédente (450) produisait
+      // des coupures en plein mot en fin de génération.
+      entry.feedbackIntermediaire = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 900 })
     } else {
       const s1Entry = session.entries.find((e) => e.pacId === pacId && e.order === 1)
       const s1Texts = s1Entry
@@ -85,7 +88,10 @@ export default async function handler(req, res) {
         barnumSummary: session.barnumProfile?.text,
         allStudentTexts: [s1Texts, s2Texts],
       })
-      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 550 })
+      // 1200 tokens : le feedback final est le plus long des deux (signature
+      // de posture + écart Barnum + question réflexive). La limite précédente
+      // (550) risquait la coupure en plein mot.
+      entry.feedbackFinal = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 1200 })
 
       const tag = tagMetaPosture(pacId, matchedTendencyId, pacContent.metaPostureMapping)
       if (tag) session.progression.metaPostureTags[pacId] = tag

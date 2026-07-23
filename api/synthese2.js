@@ -66,7 +66,7 @@ export default async function handler(req, res) {
       reaction1Text,
       character: pac.character,
     })
-    const synthese2Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 250 })
+    const synthese2Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 400 })
 
     return res.status(200).json({
       synthese2Text,
