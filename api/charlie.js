@@ -15,19 +15,25 @@ const CHARLIE_INTRO =
 // L'historique complet est STOCKÉ et affiché à l'étudiant·e, mais on n'envoie
 // à l'API que les derniers messages : la conversation vit toute la journée
 // (2 × 3h30), et renvoyer l'intégralité à chaque tour ferait gonfler coût,
-// latence et risque de dépassement de fenêtre. On garde toujours le tout
-// premier message (l'intro de Charlie) pour ancrer le personnage, puis les
-// N derniers échanges.
+// latence et risque de dépassement de fenêtre.
+//
+// ⚠️ Contrainte API Anthropic : le premier message du payload doit être de
+// rôle "user" (un payload commençant par "assistant" est rejeté en 400).
+// L'intro de Charlie (assistant) est donc conservée dans l'historique stocké
+// et affiché, mais JAMAIS envoyée en tête de payload — le personnage est de
+// toute façon entièrement porté par le system prompt. Les tours consécutifs
+// de même rôle sont fusionnés automatiquement par l'API, pas besoin de les
+// gérer ici.
 const CHARLIE_HISTORY_WINDOW = 20
 
 function windowedHistory(history) {
-  if (history.length <= CHARLIE_HISTORY_WINDOW) {
-    return history.map(({ role, content }) => ({ role, content }))
-  }
-  const intro = history[0]
-  const tail = history.slice(-CHARLIE_HISTORY_WINDOW)
-  const merged = tail[0] === intro ? tail : [intro, ...tail]
-  return merged.map(({ role, content }) => ({ role, content }))
+  const tail = history.length <= CHARLIE_HISTORY_WINDOW
+    ? history
+    : history.slice(-CHARLIE_HISTORY_WINDOW)
+  // Supprime tout message assistant en tête : le payload doit commencer par "user".
+  const firstUserIndex = tail.findIndex((m) => m.role === 'user')
+  const valid = firstUserIndex === -1 ? [] : tail.slice(firstUserIndex)
+  return valid.map(({ role, content }) => ({ role, content }))
 }
 
 const CHARLIE_SYSTEM_PROMPT = `Tu es Charlie, coordinateur·rice général·e des équipes volantes au Festival Hémisphères (friche industrielle réhabilitée, 3ᵉ édition). Tu es le point de contact pour les volant·es — les étudiant·es qui coordonnent sur le terrain — quand ils/elles circulent sur la carte du festival entre deux missions.

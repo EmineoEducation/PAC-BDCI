@@ -30,6 +30,20 @@ export default async function handler(req, res) {
       })
     }
 
+    // Valide aussi les VALEURS : elles sont interpolées dans le prompt du
+    // portrait — sans ce contrôle, un client modifié pourrait injecter du
+    // texte arbitraire dans le prompt via une « réponse » forgée.
+    const invalid = BARNUM_QUESTIONS.filter((q) => {
+      const val = answers[q.id]
+      if (q.type === 'likert') return !Number.isInteger(val) || val < 1 || val > 5
+      return val !== 'optionA' && val !== 'optionB'
+    }).map((q) => q.id)
+    if (invalid.length > 0) {
+      return res.status(400).json({
+        error: `Réponses invalides pour : ${invalid.join(', ')}.`,
+      })
+    }
+
     const session = await getSession(sessionId)
     if (!session) return res.status(404).json({ error: 'Session introuvable ou expirée.' })
 
