@@ -24,7 +24,7 @@ export default function Portal1Identification() {
 
   if (loading || session) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-[var(--font-body)]">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-body">
         <p className="text-sm text-ink-muted">Un instant...</p>
       </div>
     )
@@ -59,18 +59,18 @@ export default function Portal1Identification() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-[var(--font-body)]">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-paper font-body">
       <form
         onSubmit={handleSubmit}
         className="w-full max-w-md bg-white/70 rounded-xl border border-rule shadow-sm p-8"
       >
         <p className="text-xs tracking-wide text-ink-muted mb-1">Festival Hémisphères — 3ᵉ édition</p>
-        <h1 className="font-[var(--font-display)] font-semibold text-xl text-ink mb-6">Bienvenue, coordinateur·rice</h1>
+        <h1 className="font-display font-semibold text-xl text-ink mb-6">Bienvenue, coordinateur·rice</h1>
 
         <div className="space-y-4">
           <Field label="Nom" value={form.nom} onChange={(v) => update('nom', v)} />
           <Field label="Prénom" value={form.prenom} onChange={(v) => update('prenom', v)} />
-          <Field label="Mail" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="prenom.nom@eminéo.fr" />
+          <Field label="Mail" type="email" value={form.email} onChange={(v) => update('email', v)} placeholder="prenom.nom@emineo.fr" />
           <Field label="Formation" value={form.formation} onChange={(v) => update('formation', v)} placeholder="ex. MSMC" />
           <Field label="Campus" value={form.campus} onChange={(v) => update('campus', v)} placeholder="ex. LYO" />
         </div>
@@ -80,7 +80,7 @@ export default function Portal1Identification() {
         <button
           type="submit"
           disabled={submitting}
-          className="mt-6 w-full bg-accent text-[var(--color-paper)] rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50"
+          className="mt-6 w-full bg-accent text-paper rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50"
         >
           {submitting ? 'Un instant...' : 'Entrer dans le festival'}
         </button>

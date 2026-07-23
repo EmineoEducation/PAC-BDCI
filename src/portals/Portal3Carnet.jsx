@@ -7,7 +7,10 @@ import pacContent from '../data/pacContent.json'
 
 const COLOR_TEXT = { green: 'text-pac1', blue: 'text-pac2', purple: 'text-pac3', orange: 'text-pac4' }
 const COLOR_BG = { green: 'bg-pac1-bg', blue: 'bg-pac2-bg', purple: 'bg-pac3-bg', orange: 'bg-pac4-bg' }
-const COLOR_BORDER = { green: 'border-pac1', blue: 'border-pac2', purple: 'border-pac3', orange: 'border-pac4' }
+// Littéraux COMPLETS uniquement : Tailwind ne génère que les classes écrites
+// telles quelles dans le source — une classe fabriquée à l'exécution
+// (`${base}/30`) serait absente du CSS compilé.
+const COLOR_BORDER_SOFT = { green: 'border-pac1/30', blue: 'border-pac2/30', purple: 'border-pac3/30', orange: 'border-pac4/30' }
 const COLOR_DOT = { green: 'bg-pac1', blue: 'bg-pac2', purple: 'bg-pac3', orange: 'bg-pac4' }
 
 const BANNER_BY_PAC = {
@@ -104,10 +107,27 @@ export default function Portal3Carnet() {
     [session, pacId]
   )
 
-  // Situation active = la première non encore répondue.
-  const activeSituation = pac?.situations.find(
+  // La situation qu'on VIENT de terminer reste épinglée le temps que
+  // l'étudiant·e lise son feedback. Sans cet épinglage, la mise à jour de
+  // session dans handleSubmitReaction2 faisait basculer immédiatement
+  // activeSituation vers la situation suivante (écran incohérent après la
+  // situation 1) — et vers undefined après la situation 2, ce qui remplaçait
+  // l'écran par « Ce PAC est terminé » sans JAMAIS afficher le feedback
+  // final (signature de posture, écart Barnum, question réflexive).
+  const [doneSituationId, setDoneSituationId] = useState(null)
+
+  // Première situation non encore répondue (progression réelle).
+  const firstUnanswered = pac?.situations.find(
     (s) => !pacEntries.some((e) => e.situationId === s.id)
   )
+
+  // Situation affichée = celle épinglée (feedback en cours de lecture),
+  // sinon la première non répondue. Si l'épingle ne correspond pas à ce PAC
+  // (changement d'URL), elle est ignorée.
+  const pinnedSituation = doneSituationId
+    ? pac?.situations.find((s) => s.id === doneSituationId)
+    : null
+  const activeSituation = pinnedSituation || firstUnanswered
 
   // Étapes : 'A' (choix) → 'B' (écriture) → 'reaction1' (synthèse 1 affichée + écriture)
   // → 'reaction2' (synthèse 2 générée + écriture) → 'done' (feedback).
@@ -126,8 +146,20 @@ export default function Portal3Carnet() {
   const elapsed = usePacElapsed(pacId)
 
   // Restauration d'un éventuel brouillon local à l'arrivée sur une situation.
+  // On réinitialise d'abord tous les champs : le composant n'est PAS remonté
+  // par React Router quand seul :pacId change dans l'URL, donc sans cette
+  // remise à zéro les textes de la situation précédente resteraient affichés.
   useEffect(() => {
     setDraftRestored(false)
+    setStep('A')
+    setChoiceLabel(null)
+    setPalierBText('')
+    setReaction1Text('')
+    setReaction2Text('')
+    setSynthese2Text(null)
+    setMatchedTendencyId(null)
+    setSurpriseText(null)
+    setLastResult(null)
     if (!activeSituation) return
     const draft = loadDraft(pacId, activeSituation.id)
     if (draft) {
@@ -141,12 +173,14 @@ export default function Portal3Carnet() {
       setSurpriseText(draft.surpriseText ?? null)
     }
     setDraftRestored(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pacId, activeSituation?.id])
 
   // Sauvegarde continue (anti-rebond) du brouillon en cours, tant qu'il n'a
   // pas encore été transmis au serveur via handleSubmitReaction2.
   useEffect(() => {
     if (!activeSituation || !draftRestored) return
+    if (step === 'done') return // déjà persisté côté serveur, brouillon effacé
     if (step === 'A' && !palierBText && !reaction1Text && !reaction2Text) return
     const timeout = setTimeout(() => {
       saveDraft(pacId, activeSituation.id, {
@@ -160,10 +194,10 @@ export default function Portal3Carnet() {
     palierBText, reaction1Text, reaction2Text, synthese2Text, matchedTendencyId, surpriseText,
   ])
 
-  if (!pac) return <p className="p-8 font-[var(--font-body)]">PAC introuvable.</p>
+  if (!pac) return <p className="p-8 font-body">PAC introuvable.</p>
   if (!unlocked) {
     return (
-      <div className="p-8 text-center font-[var(--font-body)]">
+      <div className="p-8 text-center font-body">
         <p className="text-ink-muted">Ce PAC n'est pas encore débloqué.</p>
         <button onClick={() => navigate('/plan')} className="mt-4 text-sm underline">Retour au plan</button>
       </div>
@@ -231,6 +265,9 @@ export default function Portal3Carnet() {
       })
       setLastResult(result)
       setStep('done')
+      // Épingle la situation qui vient d'être terminée : l'écran de feedback
+      // doit rester sur ELLE, même une fois session mise à jour ci-dessous.
+      setDoneSituationId(activeSituation.id)
       clearDraft(pacId, activeSituation.id)
 
       // Remplace l'entrée existante (même pacId+situationId) si elle existe,
@@ -266,19 +303,18 @@ export default function Portal3Carnet() {
   }
 
   function goToNextSituation() {
+    // Libère l'épingle : activeSituation redevient la première situation non
+    // répondue, et l'effet de restauration remet tous les champs à zéro
+    // (ou restaure un éventuel brouillon de la situation suivante).
+    // step et lastResult sont remis à zéro DANS LE MÊME BATCH pour éviter un
+    // flash d'une frame (les effets ne s'exécutent qu'après le rendu).
+    setDoneSituationId(null)
     setStep('A')
-    setChoiceLabel(null)
-    setPalierBText('')
-    setReaction1Text('')
-    setReaction2Text('')
-    setSynthese2Text(null)
-    setMatchedTendencyId(null)
-    setSurpriseText(null)
     setLastResult(null)
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6 font-[var(--font-body)]">
+    <div className="max-w-6xl mx-auto px-4 py-6 font-body">
       <div className="flex gap-0 border border-rule rounded-xl overflow-hidden bg-paper min-h-[80vh]">
         <Sidebar session={session} currentPacId={pacId} activeSituationId={activeSituation?.id} />
 
@@ -300,7 +336,7 @@ export default function Portal3Carnet() {
             </div>
 
             <div className="mb-6">
-              <p className="font-[var(--font-script)] text-[32px] leading-none text-accent">Mon carnet de bord</p>
+              <p className="font-script text-[32px] leading-none text-accent">Mon carnet de bord</p>
               <p className="text-[11px] tracking-[0.08em] uppercase text-ink-muted mt-1.5">Ton bilan de compétences</p>
             </div>
 
@@ -315,7 +351,7 @@ export default function Portal3Carnet() {
                   <span>{activeSituation.title}</span>
                 </div>
 
-                <h1 className="font-[var(--font-display)] font-semibold text-[28px] leading-tight mb-6 max-w-[16ch]">
+                <h1 className="font-display font-semibold text-[28px] leading-tight mb-6 max-w-[16ch]">
                   {activeSituation.title}
                 </h1>
 
@@ -378,7 +414,7 @@ export default function Portal3Carnet() {
                         <button
                           onClick={handleSubmitB}
                           disabled={wcB < MIN_WORDS_B}
-                          className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                          className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           Envoyer ma réponse
                         </button>
@@ -415,7 +451,7 @@ export default function Portal3Carnet() {
                         <button
                           onClick={handleSubmitReaction1}
                           disabled={wcR1 < MIN_WORDS_REACTION1 || loadingSynthese2}
-                          className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                          className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {loadingSynthese2 ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
@@ -452,7 +488,7 @@ export default function Portal3Carnet() {
                         <button
                           onClick={handleSubmitReaction2}
                           disabled={wcR2 < MIN_WORDS_REACTION2 || submitting}
-                          className="bg-accent text-[var(--color-paper)] text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
+                          className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {submitting ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
@@ -484,7 +520,7 @@ export default function Portal3Carnet() {
                   </div>
                 )}
 
-                <NotesPersonnelles />
+                <NotesPersonnelles pacId={pacId} />
               </>
             )}
           </div>
@@ -523,7 +559,7 @@ function ChoiceStep({ situation, onChoose }) {
       <p className="text-[15px] text-ink-muted italic mb-3">{description}</p>
       <button
         onClick={() => onChoose(description)}
-        className="text-[14.5px] bg-accent text-[var(--color-paper)] px-4 py-2 rounded-[10px]"
+        className="text-[14.5px] bg-accent text-paper px-4 py-2 rounded-[10px]"
       >
         Continuer
       </button>
@@ -540,9 +576,31 @@ function PacFullyDone({ onBack }) {
   )
 }
 
-function NotesPersonnelles() {
+function NotesPersonnelles({ pacId }) {
   const [open, setOpen] = useState(false)
-  const [note, setNote] = useState('')
+  // Persistance strictement LOCALE (localStorage, une note par PAC) : l'espace
+  // s'annonce « privé », donc rien n'est jamais transmis au serveur — mais
+  // sans persistance, tout texte était perdu au moindre changement de page.
+  const storageKey = `pacbdci_notes_${pacId}`
+  const [note, setNote] = useState(() => {
+    try {
+      return localStorage.getItem(storageKey) || ''
+    } catch {
+      return ''
+    }
+  })
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      try {
+        localStorage.setItem(storageKey, note)
+      } catch {
+        // Stockage indisponible — la saisie continue, simplement sans persistance.
+      }
+    }, 400)
+    return () => clearTimeout(timeout)
+  }, [storageKey, note])
+
   return (
     <div className="mt-10 pt-5 border-t border-rule">
       <button
@@ -604,7 +662,7 @@ function Sidebar({ session, currentPacId, activeSituationId }) {
   return (
     <div className="w-[280px] shrink-0 bg-paper-side border-r border-rule p-6">
       <div className="mb-8">
-        <p className="font-[var(--font-display)] font-bold uppercase text-[20px] leading-tight tracking-wide">
+        <p className="font-display font-bold uppercase text-[20px] leading-tight tracking-wide">
           Festival<br />Hémisphères
         </p>
         <p className="text-[10.5px] tracking-[0.12em] uppercase text-ink-muted mt-1.5">
@@ -624,7 +682,7 @@ function Sidebar({ session, currentPacId, activeSituationId }) {
                 <span className={`w-2 h-2 rounded-full ${COLOR_DOT[pac.color]}`} />
                 <span className="text-[13px] font-semibold">{pac.id.toUpperCase()} · {pac.posture}</span>
               </div>
-              <ul className={`border-l ${COLOR_BORDER[pac.color]}/30 pl-3.5 ml-0.5 space-y-1`}>
+              <ul className={`border-l ${COLOR_BORDER_SOFT[pac.color]} pl-3.5 ml-0.5 space-y-1`}>
                 {pac.situations.map((sit) => {
                   const done = entries.some((e) => e.situationId === sit.id)
                   const isActive = sit.id === activeSituationId && pac.id === currentPacId
