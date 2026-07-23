@@ -8,7 +8,7 @@ function CharlieAvatar({ className }) {
   const [broken, setBroken] = useState(false)
   if (broken) {
     return (
-      <div className={`${className} bg-accent flex items-center justify-center text-[var(--color-paper)] font-semibold`}>
+      <div className={`${className} bg-accent flex items-center justify-center text-paper font-semibold`}>
         C
       </div>
     )
@@ -78,7 +78,7 @@ export default function CharlieWidget({ sessionId }) {
   }
 
   return (
-    <div className="fixed bottom-5 right-5 z-50 font-[var(--font-body)]">
+    <div className="fixed bottom-5 right-5 z-50 font-body">
       {open && (
         <div className="w-80 h-96 bg-paper border border-rule rounded-xl shadow-xl flex flex-col mb-3 overflow-hidden">
           <div className="flex items-center gap-2.5 px-4 py-3 border-b border-rule bg-paper-side shrink-0">
@@ -93,7 +93,7 @@ export default function CharlieWidget({ sessionId }) {
               <div key={i} className={`text-[14px] leading-relaxed ${m.role === 'user' ? 'text-right' : 'text-left'}`}>
                 <span
                   className={`inline-block max-w-[85%] px-3 py-2 rounded-[10px] text-left ${
-                    m.role === 'user' ? 'bg-accent text-[var(--color-paper)]' : 'bg-accent-bg text-ink'
+                    m.role === 'user' ? 'bg-accent text-paper' : 'bg-accent-bg text-ink'
                   }`}
                 >
                   {m.content}
@@ -113,7 +113,7 @@ export default function CharlieWidget({ sessionId }) {
             <button
               type="submit"
               disabled={sending || !input.trim()}
-              className="bg-accent text-[var(--color-paper)] text-[13px] font-semibold px-3 py-2 rounded-lg disabled:opacity-40 shrink-0"
+              className="bg-accent text-paper text-[13px] font-semibold px-3 py-2 rounded-lg disabled:opacity-40 shrink-0"
             >
               Envoyer
             </button>
@@ -127,7 +127,7 @@ export default function CharlieWidget({ sessionId }) {
         title={open ? 'Fermer la discussion avec Charlie' : 'Parler à Charlie'}
       >
         {open ? (
-          <span className="flex items-center justify-center w-full h-full text-[var(--color-paper)] text-2xl">×</span>
+          <span className="flex items-center justify-center w-full h-full text-paper text-2xl">×</span>
         ) : (
           <CharlieAvatar className="w-full h-full" />
         )}
