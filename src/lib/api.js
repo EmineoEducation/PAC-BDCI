@@ -12,6 +12,20 @@ export function clearStoredSessionId() {
   localStorage.removeItem(SESSION_STORAGE_KEY)
 }
 
+const MISSION_SEEN_KEY = 'pacbdci_mission_seen'
+
+// Gate d'UX pur (page de facilitation entre le questionnaire Barnum et la
+// carte) — n'a rien à voir avec la trace RP, donc pas de champ côté session/
+// Redis. Même logique de stockage que SESSION_STORAGE_KEY : une seule session
+// active par navigateur, pas besoin de namespacer par sessionId.
+export function hasMissionSeen() {
+  return localStorage.getItem(MISSION_SEEN_KEY) === '1'
+}
+
+export function markMissionSeen() {
+  localStorage.setItem(MISSION_SEEN_KEY, '1')
+}
+
 async function request(url, options) {
   const res = await fetch(url, options)
   const data = await res.json().catch(() => ({}))
