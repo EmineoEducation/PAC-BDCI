@@ -37,7 +37,9 @@ export default function BarnumQuestionnaire() {
     try {
       const portrait = await submitBarnum({ sessionId: session.id, answers })
       setSession({ ...session, barnumProfile: portrait })
-      navigate('/plan')
+      // La carte n'est plus accédée directement : passage par la page de
+      // facilitation (mise en contexte du poste de volant·e), cf. /mission.
+      navigate('/mission')
     } catch (err) {
       alert(`Erreur : ${err.message}`)
     } finally {
