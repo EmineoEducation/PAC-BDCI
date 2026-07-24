@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
-import { isPacUnlocked } from '../lib/progression.js'
+import { isPacUnlocked, nextPacToUnlock } from '../lib/progression.js'
 import pacContent from '../data/pacContent.json'
 import CharlieWidget from '../components/CharlieWidget.jsx'
 
@@ -25,6 +25,9 @@ export default function Portal2Map() {
   const navigate = useNavigate()
   const { session } = useSession()
   const completedPacs = session?.progression?.completedPacs || []
+  // PAC en cours (ou prochain à débloquer) — sert à scoper le plafond des
+  // relances spontanées de Charlie à 3 par PAC (null une fois les 4 terminés).
+  const currentPacId = nextPacToUnlock(completedPacs)
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -68,7 +71,7 @@ export default function Portal2Map() {
         Les zones grisées se débloquent une fois le PAC précédent terminé.
       </p>
 
-      {session?.id && <CharlieWidget sessionId={session.id} />}
+      {session?.id && <CharlieWidget sessionId={session.id} currentPacId={currentPacId} />}
     </div>
   )
 }

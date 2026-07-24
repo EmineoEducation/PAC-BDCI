@@ -1,9 +1,18 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { createSession } from '../lib/api.js'
+import { createSession, hasMissionSeen } from '../lib/api.js'
 import { useSession } from '../lib/SessionContext.jsx'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+// Prochaine étape du parcours pour une session donnée : barnum → mission
+// (facilitation, une seule fois) → plan. Centralisé ici car utilisé à la fois
+// pour la reprise de session (useEffect ci-dessous) et après identification.
+function nextRouteForSession(session) {
+  if (!session.barnumProfile) return '/barnum'
+  if (!hasMissionSeen()) return '/mission'
+  return '/plan'
+}
 
 export default function Portal1Identification() {
   const navigate = useNavigate()
@@ -18,7 +27,7 @@ export default function Portal1Identification() {
   // formulaire, ce qui écraserait le portrait Barnum et les PAC déjà validés.
   useEffect(() => {
     if (!loading && session) {
-      navigate(session.barnumProfile ? '/plan' : '/barnum', { replace: true })
+      navigate(nextRouteForSession(session), { replace: true })
     }
   }, [loading, session, navigate])
 
@@ -50,7 +59,7 @@ export default function Portal1Identification() {
       const newSession = await createSession(form)
       setSession(newSession)
       // Le portrait Barnum n'est déclenché qu'une seule fois, à la toute première session.
-      navigate(newSession.barnumProfile ? '/plan' : '/barnum')
+      navigate(nextRouteForSession(newSession))
     } catch (err) {
       setError(err.message)
     } finally {
