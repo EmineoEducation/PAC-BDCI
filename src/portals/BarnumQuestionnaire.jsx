@@ -19,9 +19,14 @@ export default function BarnumQuestionnaire() {
     [dimension]
   )
   const likertQs = questions.filter((q) => q.type === 'likert')
-  const projQ = questions.find((q) => q.type === 'projectif')
+  // Plusieurs projectifs par dimension depuis le passage à 48 items (04/08) :
+  // la version précédente n'en prenait qu'un seul (`find`), le second n'aurait
+  // jamais été affiché ni exigé pour valider l'étape.
+  const projQs = questions.filter((q) => q.type === 'projectif')
 
-  const stepComplete = likertQs.every((q) => answers[q.id] !== undefined) && answers[projQ.id] !== undefined
+  const stepComplete =
+    likertQs.every((q) => answers[q.id] !== undefined) &&
+    projQs.every((q) => answers[q.id] !== undefined)
 
   function setAnswer(id, value) {
     setAnswers((a) => ({ ...a, [id]: value }))
@@ -52,7 +57,7 @@ export default function BarnumQuestionnaire() {
       <p className="text-xs text-neutral-500 mb-1">Avant d'entrer dans le festival</p>
       <h1 className="text-xl font-medium mb-1">Portrait professionnel</h1>
       <p className="text-sm text-neutral-500 mb-6">
-        5 minutes pour dégager une première image de votre manière d'être en contexte professionnel.
+        Une dizaine de minutes pour dégager une première image de votre manière d'être en contexte professionnel.
         Répondez spontanément — il n'y a pas de bonne ou de mauvaise réponse.
       </p>
 
@@ -96,24 +101,32 @@ export default function BarnumQuestionnaire() {
         ))}
 
         <div className="pt-2 border-t border-neutral-200">
-          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-3 mt-4">Situation concrète</p>
-          <p className="text-sm text-neutral-900 mb-3">{projQ.text}</p>
-          <div className="grid grid-cols-2 gap-2">
-            {['optionA', 'optionB'].map((key) => (
-              <button
-                key={key}
-                onClick={() => setAnswer(projQ.id, key)}
-                className={`text-left text-sm p-3 rounded-lg border leading-relaxed ${
-                  answers[projQ.id] === key
-                    ? 'border-pac3 bg-pac3-bg text-pac3 font-medium'
-                    : 'border-neutral-300 text-neutral-700'
-                }`}
-              >
-                <span className="block text-[11px] uppercase tracking-wide mb-1 opacity-70">
-                  {key === 'optionA' ? 'Option A' : 'Option B'}
-                </span>
-                {projQ[key]}
-              </button>
+          <p className="text-xs font-medium uppercase tracking-wide text-neutral-500 mb-3 mt-4">
+            {projQs.length > 1 ? 'Situations concrètes' : 'Situation concrète'}
+          </p>
+          <div className="space-y-5">
+            {projQs.map((projQ) => (
+              <div key={projQ.id}>
+                <p className="text-sm text-neutral-900 mb-3">{projQ.text}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {['optionA', 'optionB'].map((key) => (
+                    <button
+                      key={key}
+                      onClick={() => setAnswer(projQ.id, key)}
+                      className={`text-left text-sm p-3 rounded-lg border leading-relaxed ${
+                        answers[projQ.id] === key
+                          ? 'border-pac3 bg-pac3-bg text-pac3 font-medium'
+                          : 'border-neutral-300 text-neutral-700'
+                      }`}
+                    >
+                      <span className="block text-[11px] uppercase tracking-wide mb-1 opacity-70">
+                        {key === 'optionA' ? 'Option A' : 'Option B'}
+                      </span>
+                      {projQ[key]}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>

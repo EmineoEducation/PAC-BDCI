@@ -59,6 +59,11 @@ export default async function handler(req, res) {
       text: portraitText,
       generatedAt: new Date().toISOString(),
     }
+    // Réponses brutes conservées (04/08) : le portrait en prose ne suffit pas
+    // à reconstituer le tracé d'entrée de la toile du bilan, qui a besoin des
+    // valeurs item par item pour agréger une position par axe. Elles restent
+    // internes — jamais renvoyées au client, jamais affichées à l'étudiant.
+    session.barnumAnswers = answers
     await saveSession(sessionId, session)
 
     return res.status(200).json({ portrait: session.barnumProfile })
