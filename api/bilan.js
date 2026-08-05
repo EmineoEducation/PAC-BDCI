@@ -144,6 +144,7 @@ export default async function handler(req, res) {
               pac.situations.find((sit) => sit.id === e.situationId)?.title ||
               `Situation ${e.order}`,
             choiceLabel: e.choiceLabel || null,
+            focusLoss: e.focusLoss || null,
             palierBText: e.palierBText || null,
             reaction1Text: e.reaction1Text || null,
             reaction2Text: e.reaction2Text || null,

@@ -4,6 +4,7 @@ import { useSession } from '../lib/SessionContext.jsx'
 import { isPacUnlocked } from '../lib/progression.js'
 import { fetchSynthese2, submitResponse } from '../lib/api.js'
 import pacContent from '../data/pacContent.json'
+import { useFocusLoss, formatAway } from '../lib/useFocusLoss.js'
 
 const COLOR_TEXT = { green: 'text-pac1', blue: 'text-pac2', purple: 'text-pac3', orange: 'text-pac4' }
 const COLOR_BG = { green: 'bg-pac1-bg', blue: 'bg-pac2-bg', purple: 'bg-pac3-bg', orange: 'bg-pac4-bg' }
@@ -207,6 +208,12 @@ export default function Portal3Carnet() {
     )
   }
 
+  // Anti-gaming : actif uniquement pendant les phases d'écriture, jamais sur
+  // les écrans de lecture (synthèses, feedback) où sortir de la page est
+  // légitime. Signal doux et transparent — cf. src/lib/useFocusLoss.js.
+  const isWriting = step === 'B' || step === 'reaction1' || step === 'reaction2'
+  const focusLoss = useFocusLoss(isWriting)
+
   const wcB = countWords(palierBText)
   const [minWordsB, maxWordsB] = activeSituation ? activeSituation.palierB.wordRange : [0, 0]
   const inRangeB = wcB >= minWordsB && wcB <= maxWordsB
@@ -259,6 +266,7 @@ export default function Portal3Carnet() {
         pacId,
         situationId: activeSituation.id,
         choiceLabel,
+        focusLoss: { awayCount: focusLoss.awayCount, awayMs: focusLoss.awayMs },
         palierBText,
         matchedTendencyId,
         surpriseText,
@@ -337,6 +345,16 @@ export default function Portal3Carnet() {
                 ⏱ {formatElapsed(elapsed)} sur ce PAC · repère indicatif : 3h30
               </span>
             </div>
+
+            {focusLoss.lastAwayMs > 0 && (
+              <p className="text-[12.5px] text-ink-muted italic -mt-3 mb-5">
+                Tu es revenu·e après {formatAway(focusLoss.lastAwayMs)} — c'est noté, sans aucune
+                conséquence sur ce que tu écris.{' '}
+                <button onClick={focusLoss.acknowledge} className="underline hover:no-underline">
+                  Masquer
+                </button>
+              </p>
+            )}
 
             <div className="mb-6">
               <p className="font-script text-[32px] leading-none text-accent">Mon carnet de bord</p>

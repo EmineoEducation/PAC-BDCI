@@ -279,6 +279,23 @@ function annexe(doc, productions, onNewPage) {
         y += 2.4
       }
 
+      // Signal doux anti-gaming, affich\u00e9 seulement s'il y a quelque chose \u00e0
+      // dire. Formul\u00e9 sans jugement : c'est une observation, pas un reproche,
+      // et il ne d\u00e9tecte pas un second \u00e9cran (limite assum\u00e9e).
+      const fl = sit.focusLoss
+      if (fl?.awayCount > 0) {
+        ensure(8)
+        const min = Math.round(fl.awayMs / 60000)
+        const dur = min >= 1 ? `${min} min` : `${Math.round(fl.awayMs / 1000)} s`
+        doc.setFont('helvetica', 'italic').setFontSize(8).setTextColor(...GREY)
+        doc.text(
+          `Page quitt\u00e9e ${fl.awayCount} fois pendant l'\u00e9criture, ${dur} au total.`,
+          M + 4,
+          y
+        )
+        y += 6.4
+      }
+
       block('Production \u00e9crite', sit.palierBText)
       block('Premi\u00e8re r\u00e9action', sit.reaction1Text)
       block('Seconde r\u00e9action', sit.reaction2Text)

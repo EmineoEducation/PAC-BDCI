@@ -66,7 +66,7 @@ export async function fetchSynthese2({ sessionId, pacId, situationId, choiceLabe
 }
 
 export async function submitResponse({
-  sessionId, pacId, situationId, choiceLabel,
+  sessionId, pacId, situationId, choiceLabel, focusLoss,
   palierBText, matchedTendencyId, surpriseText,
   reaction1Text, synthese2Text, reaction2Text,
 }) {
@@ -74,7 +74,7 @@ export async function submitResponse({
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      sessionId, pacId, situationId, choiceLabel,
+      sessionId, pacId, situationId, choiceLabel, focusLoss,
       palierBText, matchedTendencyId, surpriseText,
       reaction1Text, synthese2Text, reaction2Text,
     }),

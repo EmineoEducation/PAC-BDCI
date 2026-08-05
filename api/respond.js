@@ -24,7 +24,7 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
     const {
       sessionId, pacId, situationId, choiceLabel,
-      palierBText, matchedTendencyId, surpriseText,
+      palierBText, matchedTendencyId, surpriseText, focusLoss,
       reaction1Text, synthese2Text, reaction2Text,
     } = body || {}
 
@@ -45,11 +45,23 @@ export default async function handler(req, res) {
     const situation = pac.situations.find((s) => s.id === situationId)
     if (!situation) return res.status(404).json({ error: `Situation ${situationId} introuvable.` })
 
+    // Signal doux anti-gaming : nombre de sorties de page et temps cumulé
+    // passé ailleurs pendant l'écriture. Ne détecte PAS un second écran —
+    // limite assumée. Normalisé côté serveur pour qu'un client bricolé ne
+    // puisse pas injecter n'importe quoi dans la trace RP.
+    const focusSignal = focusLoss && typeof focusLoss === 'object'
+      ? {
+          awayCount: Math.max(0, Math.min(999, Number(focusLoss.awayCount) || 0)),
+          awayMs: Math.max(0, Math.min(86400000, Number(focusLoss.awayMs) || 0)),
+        }
+      : { awayCount: 0, awayMs: 0 }
+
     const entry = {
       pacId,
       situationId,
       order: situation.order,
       choiceLabel: choiceLabel || null,
+      focusLoss: focusSignal,
       palierBText,
       matchedTendencyId: matchedTendencyId || null,
       offTree: matchedTendencyId === 'hors_arbre',
