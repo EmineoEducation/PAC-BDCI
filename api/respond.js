@@ -3,6 +3,7 @@ import { askClaude, MODEL_DEFAULT } from '../lib/anthropic.js'
 import { buildFeedbackIntermediairePrompt, buildFeedbackFinalPrompt } from '../lib/prompts.js'
 import { isPacUnlocked, tagMetaPosture } from '../src/lib/progression.js'
 import pacContent from '../src/data/pacContent.json' with { type: 'json' }
+import { persistTrace } from '../lib/feedback.js'
 
 // POST /api/respond
 // { sessionId, pacId, situationId, choiceLabel, palierBText, matchedTendencyId,
@@ -127,6 +128,16 @@ export default async function handler(req, res) {
       session.entries.push(entry)
     }
     await saveSession(sessionId, session)
+
+    // Trace analytique persistante, écrite hors de la session et pseudonymisée
+    // (voir lib/feedback.js). La session porte un TTL de 7 jours et finit par
+    // contenir des données nominatives ; la trace doit survivre à la campagne
+    // sans jamais en contenir. Idempotente par construction : le champ Redis
+    // est indexé sur (étudiant, pacId, situationId), donc un ré-POST écrase au
+    // lieu d'empiler — même logique que le remplacement d'entrée ci-dessus.
+    // Best-effort : persistTrace n'émet jamais d'exception, un échec Redis
+    // n'interrompt pas le parcours de l'étudiant.
+    await persistTrace(sessionId, entry)
 
     return res.status(200).json(result)
   } catch (err) {
