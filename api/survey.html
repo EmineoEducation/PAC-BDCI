@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Votre retour — PAC Éminéo</title>
+<style>
+  /* Charte Éminéo. Ces six valeurs sont le seul endroit à modifier pour
+     réutiliser la page sur un autre dispositif ou réaligner la palette.
+     À noter : api/send-bilan.js utilise des cousines très proches
+     (#0B2B2D / #5DE298 / #E3FFF0). Ce sont les valeurs officielles de la
+     charte qui sont retenues ici. */
+  :root {
+    --ink:       #033336;
+    --deep:      #00474C;
+    --mint:      #40E399;
+    --mint-soft: #8FF2C2;
+    --wash:      #DEFFED;
+    --amber:     #FBAE40;
+    --paper:     #FFFFFF;
+    --rule:      rgba(3, 51, 54, 0.12);
+    --muted:     rgba(3, 51, 54, 0.58);
+    --sans: "Gotham", "Gotham SSm", "Montserrat", -apple-system,
+            BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    margin: 0;
+    background: var(--wash);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    padding: 0 20px 80px;
+  }
+
+  /* Rail de progression : information réelle, pas décor. Il se remplit à
+     mesure que les questions sont renseignées et donne au répondant une
+     idée honnête de ce qu'il lui reste à faire. */
+  .rail {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: rgba(3, 51, 54, 0.08);
+    z-index: 10;
+  }
+  .rail__fill {
+    height: 100%;
+    width: 0;
+    background: var(--mint);
+    transition: width 220ms ease;
+  }
+
+  .wrap { max-width: 620px; margin: 0 auto; }
+
+  header { padding: 56px 0 8px; }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--deep);
+    opacity: 0.75;
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 7vw, 42px);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    font-weight: 700;
+    margin: 0 0 16px;
+  }
+
+  .lede {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: var(--paper);
+    border-radius: 14px;
+    padding: 28px 24px 8px;
+    margin-top: 32px;
+    box-shadow: 0 1px 2px rgba(3, 51, 54, 0.06),
+                0 12px 32px -12px rgba(3, 51, 54, 0.18);
+  }
+
+  /* Ancres affichées une seule fois, en tête du bloc : les répéter sous
+     chaque ligne alourdirait la lecture sans rien apprendre. */
+  .anchors {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 4px;
+  }
+
+  fieldset {
+    border: 0;
+    margin: 0;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  fieldset:last-of-type { border-bottom: 0; }
+
+  legend {
+    padding: 0;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 14px;
+  }
+
+  .scale {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+  }
+
+  .scale input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    pointer-events: none;
+  }
+
+  .scale label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 46px;
+    border: 1.5px solid var(--rule);
+    border-radius: 9px;
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    cursor: pointer;
+    user-select: none;
+    transition: background 140ms ease, border-color 140ms ease,
+                color 140ms ease, transform 140ms ease;
+  }
+
+  .scale label:hover { border-color: var(--mint); color: var(--ink); }
+
+  .scale input:checked + label {
+    background: var(--mint);
+    border-color: var(--mint);
+    color: var(--ink);
+    transform: translateY(-1px);
+  }
+
+  .scale input:focus-visible + label {
+    outline: 3px solid var(--deep);
+    outline-offset: 2px;
+  }
+
+  .field { padding: 20px 0 0; }
+  .field:first-of-type { border-top: 1px solid var(--rule); }
+
+  label.lbl {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .hint { font-weight: 400; color: var(--muted); }
+
+  input[type="text"], textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--wash);
+    border: 1.5px solid transparent;
+    border-radius: 9px;
+    padding: 12px 14px;
+    resize: vertical;
+  }
+  input[type="text"]:focus, textarea:focus {
+    outline: none;
+    border-color: var(--deep);
+    background: var(--paper);
+  }
+  textarea { min-height: 130px; line-height: 1.5; }
+
+  .actions { margin-top: 28px; }
+
+  button {
+    width: 100%;
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: var(--wash);
+    background: var(--ink);
+    border: 0;
+    border-radius: 10px;
+    padding: 17px 20px;
+    cursor: pointer;
+    transition: background 140ms ease;
+  }
+  button:hover:not(:disabled) { background: var(--deep); }
+  button:focus-visible { outline: 3px solid var(--deep); outline-offset: 3px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .status {
+    margin-top: 14px;
+    font-size: 14px;
+    text-align: center;
+    min-height: 20px;
+    color: var(--muted);
+  }
+  .status[data-tone="error"] {
+    color: var(--ink);
+    background: var(--amber);
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: left;
+  }
+
+  .note {
+    margin-top: 28px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+    border-left: 3px solid var(--mint-soft);
+    padding-left: 14px;
+  }
+
+  /* Écrans de remplacement : même carte, même rythme, pas de mise en scène. */
+  .panel { display: none; }
+  .panel[data-on] { display: block; }
+
+  .done h2 {
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    margin: 0 0 12px;
+  }
+  .done p { color: var(--muted); margin: 0; }
+  .tick {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--mint);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="rail" aria-hidden="true"><div class="rail__fill" id="railFill"></div></div>
+
+<div class="wrap">
+
+  <!-- ÉTAT 1 : lien incomplet -->
+  <section class="panel" id="panelNoSession" role="alert">
+    <header>
+      <p class="eyebrow">Éminéo Éducation</p>
+      <h1>Ce lien est incomplet</h1>
+      <p class="lede">Le questionnaire a besoin de l'identifiant de votre session
+      pour rattacher votre retour au bon parcours. Revenez à l'écran de fin de
+      votre PAC et utilisez le bouton « Donner mon avis » qui s'y trouve.</p>
+    </header>
+  </section>
+
+  <!-- ÉTAT 2 : formulaire -->
+  <section class="panel" id="panelForm">
+    <header>
+      <p class="eyebrow" id="eyebrow">Éminéo Éducation · PAC</p>
+      <h1>Votre retour<br>sur le dispositif</h1>
+      <p class="lede">Six questions, un commentaire libre, deux minutes. Vos
+      réponses sont anonymes : elles ne sont rattachées ni à votre nom ni à
+      votre adresse.</p>
+    </header>
+
+    <div class="card">
+      <div class="anchors">
+        <span>1 · Pas du tout</span>
+        <span>5 · Tout à fait</span>
+      </div>
+
+      <div id="questions"></div>
+
+      <div class="field">
+        <label class="lbl" for="campus">Votre campus <span class="hint">— facultatif</span></label>
+        <input type="text" id="campus" autocomplete="off" placeholder="Nantes, Le Mans, La Rochelle…">
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="comment">Ce que vous voulez ajouter <span class="hint">— facultatif</span></label>
+        <textarea id="comment" placeholder="Ce qui vous a marqué, ce qui vous a manqué, ce que vous changeriez."></textarea>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="send">Envoyer mon retour</button>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+
+    <p class="note">Votre identifiant de session est transformé en empreinte
+    irréversible avant enregistrement. Ni votre nom, ni votre adresse email
+    n'entrent dans ces données.</p>
+  </section>
+
+  <!-- ÉTAT 3 : envoyé -->
+  <section class="panel done" id="panelDone">
+    <header>
+      <p class="eyebrow">Éminéo Éducation</p>
+      <h1>Merci</h1>
+      <p class="lede">Votre retour est enregistré. Il servira à faire évoluer
+      le dispositif pour les promotions suivantes.</p>
+    </header>
+    <div class="card" style="padding:24px">
+      <div class="tick" aria-hidden="true">✓</div>
+      <h2>C'est envoyé</h2>
+      <p>Vous pouvez fermer cette page.</p>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // Les six questions sont dupliquées ici depuis api/survey.js. Toute
+  // modification doit être faite des deux côtés : le serveur ne retient que
+  // les identifiants qu'il connaît, une question ajoutée ici sans son
+  // pendant serveur serait silencieusement ignorée.
+  var QUESTIONS = [
+    { id: 'clarte',         label: "Les consignes étaient claires" },
+    { id: 'realisme',       label: "Les situations m'ont paru réalistes" },
+    { id: 'utilite',        label: "Le feedback reçu m'a été utile" },
+    { id: 'difficulte',     label: "Le niveau de difficulté était adapté" },
+    { id: 'duree',          label: "La durée du dispositif était adaptée" },
+    { id: 'recommandation', label: "Je recommanderais ce dispositif" }
+  ];
+
+  var params  = new URLSearchParams(location.search);
+  // `session` est la forme courte attendue ; `sessionId` est accepté pour
+  // rester compatible avec un lien construit à l'ancienne.
+  var session = params.get('session') || params.get('sessionId') || '';
+  var bloc    = params.get('bloc') || '';
+
+  var show = function (id) {
+    ['panelNoSession', 'panelForm', 'panelDone'].forEach(function (p) {
+      document.getElementById(p).removeAttribute('data-on');
+    });
+    document.getElementById(id).setAttribute('data-on', '');
+  };
+
+  if (!session) { show('panelNoSession'); return; }
+
+  if (bloc) {
+    document.getElementById('eyebrow').textContent =
+      'Éminéo Éducation · ' + bloc.replace(/[<>&"']/g, '');
+  }
+
+  // Construction des lignes d'échelle
+  var host = document.getElementById('questions');
+  QUESTIONS.forEach(function (q) {
+    var fs = document.createElement('fieldset');
+    var lg = document.createElement('legend');
+    lg.textContent = q.label;
+    fs.appendChild(lg);
+
+    var scale = document.createElement('div');
+    scale.className = 'scale';
+
+    for (var v = 1; v <= 5; v++) {
+      var uid = q.id + '-' + v;
+      var input = document.createElement('input');
+      input.type = 'radio';
+      input.name = q.id;
+      input.value = String(v);
+      input.id = uid;
+
+      var lab = document.createElement('label');
+      lab.setAttribute('for', uid);
+      lab.textContent = String(v);
+
+      scale.appendChild(input);
+      scale.appendChild(lab);
+    }
+
+    fs.appendChild(scale);
+    host.appendChild(fs);
+  });
+
+  var fill = document.getElementById('railFill');
+  var refreshRail = function () {
+    var done = QUESTIONS.filter(function (q) {
+      return document.querySelector('input[name="' + q.id + '"]:checked');
+    }).length;
+    fill.style.width = (done / QUESTIONS.length * 100) + '%';
+  };
+  host.addEventListener('change', refreshRail);
+
+  var btn    = document.getElementById('send');
+  var status = document.getElementById('status');
+
+  var setStatus = function (msg, tone) {
+    status.textContent = msg || '';
+    if (tone) { status.setAttribute('data-tone', tone); }
+    else { status.removeAttribute('data-tone'); }
+  };
+
+  btn.addEventListener('click', function () {
+    var answers = {};
+    QUESTIONS.forEach(function (q) {
+      var hit = document.querySelector('input[name="' + q.id + '"]:checked');
+      if (hit) { answers[q.id] = Number(hit.value); }
+    });
+
+    var comment = document.getElementById('comment').value.trim();
+    var campus  = document.getElementById('campus').value.trim();
+
+    if (!Object.keys(answers).length && !comment) {
+      setStatus("Répondez à au moins une question, ou laissez un commentaire.", 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    setStatus('Envoi…');
+
+    fetch('/api/survey', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sessionId: session,
+        campus: campus || undefined,
+        answers: answers,
+        comment: comment || undefined
+      })
+    })
+      .then(function (r) {
+        return r.json().catch(function () { return {}; })
+          .then(function (d) { return { ok: r.ok, code: r.status, data: d }; });
+      })
+      .then(function (res) {
+        if (res.ok && res.data.saved) { show('panelDone'); window.scrollTo(0, 0); return; }
+        btn.disabled = false;
+        if (res.code === 404) {
+          setStatus("Cette session n'est plus active. Le questionnaire se remplit dans les jours qui suivent le PAC.", 'error');
+        } else {
+          setStatus(res.data.error || "L'envoi a échoué. Réessayez dans un instant.", 'error');
+        }
+      })
+      .catch(function () {
+        btn.disabled = false;
+        setStatus("Connexion perdue. Vérifiez votre réseau et réessayez.", 'error');
+      });
+  });
+
+  show('panelForm');
+})();
+</script>
+
+</body>
+</html>
