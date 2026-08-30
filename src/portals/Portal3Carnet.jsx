@@ -1,3 +1,12 @@
+// ==============================================================
+//  LIVRAISON B02 - PAC BDCI - LE VOLUME DE MOTS DEVIENT UN REPERE
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : src/portals/Portal3Carnet.jsx   (ecrase le fichier existant)
+//  CORRECTIF   : transposition de F42 - plancher anti-vide 15 mots,
+//                fourchette affichee en repere, confirmation en dessous
+//  DATE        : 30/08/2026
+// ==============================================================
+
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
@@ -21,14 +30,30 @@ const BANNER_BY_PAC = {
   pac4: '/banners/pac4_espace_presse.png',
 }
 
-// Le bouton d'envoi ne s'active qu'à partir du MINIMUM AFFICHÉ de chaque
-// fourchette (« entre X et Y mots ») : l'interface annonçait ces bornes
-// mais acceptait l'envoi bien en dessous, ce qui rendait la consigne
-// illisible. Le maximum reste indicatif (dépasser de quelques mots ne
-// bloque pas — seule l'insuffisance bloque).
-// NB : choix pédagogique inverse possible (bornes purement indicatives) —
-// il suffirait alors de réafficher « repère : X-Y mots » et de rétablir un
-// simple garde-fou anti-vide ici.
+// ── B02 · Le volume de mots est un REPÈRE, plus un verrou ───────────────────
+//
+// Décision pédagogique du 28/08 (correctif F42 sur les 18 PAC), transposée ici
+// le 30/08 : BDCI est un projet séparé et n'avait jamais reçu F42.
+//
+// Ce qu'il y avait avant : le bouton d'envoi restait grisé tant que le minimum
+// de la fourchette n'était pas atteint — 250 mots pour le palier B, huit fois
+// dans la journée. Constat de terrain au campus de Lille : une apprenante avait
+// identifié la contradiction que l'exercice visait — la compétence était donc
+// validée — et restait bloquée sous le seuil. Le compteur mesure la seule chose
+// qui n'est pas évaluée : deux cent cinquante mots de délayage passent, cent
+// quatre-vingts mots justes sont refusés.
+//
+// Effet de bord propre à BDCI : le plancher du palier B commandait aussi le
+// passage à la synthèse 2. Une personne coincée sous le seuil ne perdait pas
+// une soumission, elle perdait la moitié de la situation — le rebondissement
+// et son feedback.
+//
+// Ce qu'il y a maintenant : la fourchette reste affichée et reste un repère
+// utile. Le seul verrou est un plancher anti-vide de 15 mots par champ,
+// identique à PLANCHER_MOTS dans app-livrable.jsx sur les 18. Entre 15 mots et
+// le repère, l'envoi demande une confirmation explicite — la personne garde la
+// main, mais elle sait qu'elle envoie court.
+const PLANCHER_MOTS = 15
 
 const [REACTION1_MIN, REACTION1_MAX] = pacContent.meta.reaction1WordRange
 const [REACTION2_MIN, REACTION2_MAX] = pacContent.meta.reaction2WordRange
@@ -223,6 +248,51 @@ export default function Portal3Carnet() {
 
   const wcR2 = countWords(reaction2Text)
   const inRangeR2 = wcR2 >= REACTION2_MIN && wcR2 <= REACTION2_MAX
+
+  // ── B02 · Confirmation d'envoi sous le repère ─────────────────────────────
+  // `confirmEnvoi` porte l'action à exécuter si la personne confirme, ou null
+  // quand aucune confirmation n'est en attente. Aucune dépendance, aucun
+  // window.confirm (bloquant et impossible à styler) : un simple encadré rendu
+  // sous le compteur.
+  const [confirmEnvoi, setConfirmEnvoi] = useState(null)
+
+  // Ferme toute confirmation restée ouverte quand on change d'étape ou de
+  // situation, pour qu'un encadré ne survive jamais à son contexte.
+  useEffect(() => { setConfirmEnvoi(null) }, [step, pacId, activeSituation?.id])
+
+  // Garde-fou unique : sous PLANCHER_MOTS, l'envoi est refusé (champ vide ou
+  // quasi vide). Entre PLANCHER_MOTS et le repère, on demande confirmation.
+  // Au-dessus du repère, envoi direct.
+  function envoyerAvecRepere(nbMots, repereMin, action) {
+    if (nbMots < PLANCHER_MOTS) return
+    if (nbMots < repereMin) { setConfirmEnvoi(() => action); return }
+    action()
+  }
+
+  // Encadré de confirmation, rendu juste sous le compteur du champ concerné.
+  const BlocConfirmation = () => (
+    <div className="mt-3 border border-rule rounded-[10px] bg-[#fbf7ee] px-4 py-3">
+      <p className="text-[14px] leading-relaxed">
+        Ta réponse est plus courte que le repère indiqué. Ce n'est pas bloquant :
+        une réponse courte et juste vaut mieux qu'une réponse longue et creuse.
+        Tu peux la compléter, ou l'envoyer telle quelle.
+      </p>
+      <div className="flex items-center gap-3 mt-3">
+        <button
+          onClick={() => setConfirmEnvoi(null)}
+          className="text-[14px] font-semibold px-4 py-2 rounded-[10px] border border-rule hover:bg-white/60 transition-colors"
+        >
+          Compléter d'abord
+        </button>
+        <button
+          onClick={() => { const a = confirmEnvoi; setConfirmEnvoi(null); if (a) a() }}
+          className="bg-accent text-paper text-[14px] font-semibold px-4 py-2 rounded-[10px] hover:opacity-90 transition-opacity"
+        >
+          Envoyer quand même
+        </button>
+      </div>
+    </div>
+  )
 
   const bridge = activeSituation?.palierA.microChoiceBridges?.[choiceLabel]
 
@@ -430,17 +500,18 @@ export default function Portal3Carnet() {
                     {step === 'B' && (
                       <div className="flex items-center justify-between mt-3">
                         <span className={`text-[13px] ${inRangeB ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
-                          {wcB} mots · entre {minWordsB} et {maxWordsB}
+                          {wcB} mots · repère : {minWordsB} à {maxWordsB}
                         </span>
                         <button
-                          onClick={handleSubmitB}
-                          disabled={wcB < minWordsB}
+                          onClick={() => envoyerAvecRepere(wcB, minWordsB, handleSubmitB)}
+                          disabled={wcB < PLANCHER_MOTS}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           Envoyer ma réponse
                         </button>
                       </div>
                     )}
+                    {step === 'B' && confirmEnvoi && <BlocConfirmation />}
                   </div>
                 )}
 
@@ -467,17 +538,18 @@ export default function Portal3Carnet() {
                     {step === 'reaction1' && (
                       <div className="flex items-center justify-between mt-3">
                         <span className={`text-[13px] ${inRangeR1 ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
-                          {wcR1} mots · entre {REACTION1_MIN} et {REACTION1_MAX}
+                          {wcR1} mots · repère : {REACTION1_MIN} à {REACTION1_MAX}
                         </span>
                         <button
-                          onClick={handleSubmitReaction1}
-                          disabled={wcR1 < REACTION1_MIN || loadingSynthese2}
+                          onClick={() => envoyerAvecRepere(wcR1, REACTION1_MIN, handleSubmitReaction1)}
+                          disabled={wcR1 < PLANCHER_MOTS || loadingSynthese2}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {loadingSynthese2 ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
                       </div>
                     )}
+                    {step === 'reaction1' && confirmEnvoi && <BlocConfirmation />}
                   </div>
                 )}
 
@@ -504,17 +576,18 @@ export default function Portal3Carnet() {
                     {step === 'reaction2' && (
                       <div className="flex items-center justify-between mt-3">
                         <span className={`text-[13px] ${inRangeR2 ? 'text-accent font-semibold' : 'text-ink-muted'}`}>
-                          {wcR2} mots · entre {REACTION2_MIN} et {REACTION2_MAX}
+                          {wcR2} mots · repère : {REACTION2_MIN} à {REACTION2_MAX}
                         </span>
                         <button
-                          onClick={handleSubmitReaction2}
-                          disabled={wcR2 < REACTION2_MIN || submitting}
+                          onClick={() => envoyerAvecRepere(wcR2, REACTION2_MIN, handleSubmitReaction2)}
+                          disabled={wcR2 < PLANCHER_MOTS || submitting}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
                           {submitting ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
                       </div>
                     )}
+                    {step === 'reaction2' && confirmEnvoi && <BlocConfirmation />}
                   </div>
                 )}
 
