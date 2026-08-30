@@ -1,3 +1,11 @@
+// ==============================================================
+//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : src/lib/api.js   (ecrase le fichier existant)
+//  CORRECTIF   : reprise reseau (3 tentatives, 800ms/1,6s) + timeout client 90 s
+//  DATE        : 30/08/2026
+// ==============================================================
+
 const SESSION_STORAGE_KEY = 'pacbdci_session_id'
 
 export function getStoredSessionId() {
@@ -26,11 +34,80 @@ export function markMissionSeen() {
   localStorage.setItem(MISSION_SEEN_KEY, '1')
 }
 
+// ── B01 · Reprise reseau ────────────────────────────────────────────────────
+// Equivalent de window.PAC_FETCH sur la chaine des 18 PAC (correctif F39).
+// Motif : les etudiants travaillent sur leur propre machine en partage de
+// connexion mobile. Un seul fetch sans reprise = une coupure de deux secondes
+// suffit a perdre une production. Trois etudiantes y ont perdu leur matinee a
+// Lille le 27/08 avant que F39 ne soit pose.
+//
+// On rejoue uniquement ce qui est rejouable sans risque :
+//   - echec au niveau transport (fetch qui rejette : coupure, DNS, TLS)
+//   - delai d'attente depasse cote client
+//   - 408, 429, 500, 502, 503, 504 renvoyes par la plateforme
+// Un 4xx metier (400 champ manquant, 403 PAC verrouille, 404 session expiree)
+// n'est JAMAIS rejoue : le rejouer donnerait le meme resultat trois fois.
+//
+// /api/respond est idempotent cote serveur (indexe sur pacId+situationId), un
+// double envoi remplace au lieu d'empiler. Les autres appels sont soit des
+// lectures, soit sans effet de bord cumulatif.
+
+const RETRY_MAX = 3
+const RETRY_DELAIS = [800, 1600] // ms, entre chaque nouvelle tentative
+const RETRY_STATUTS = new Set([408, 429, 500, 502, 503, 504])
+
+// Les generations Claude les plus longues (portrait Barnum, bilan) tournent
+// autour de 40 s. La fonction serverless est plafonnee a 60 s (maxDuration),
+// donc 90 s cote client ne coupe jamais avant le serveur : ce garde-fou ne
+// sert qu'a debloquer une socket restee suspendue, cas courant en 4G.
+const TIMEOUT_MS = 90000
+
+const pause = (ms) => new Promise((r) => setTimeout(r, ms))
+
+async function fetchAvecTimeout(url, options) {
+  if (typeof AbortController === 'undefined') return fetch(url, options)
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), TIMEOUT_MS)
+  try {
+    return await fetch(url, { ...options, signal: ctrl.signal })
+  } finally {
+    clearTimeout(t)
+  }
+}
+
 async function request(url, options) {
-  const res = await fetch(url, options)
-  const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || `Erreur ${res.status}`)
-  return data
+  let derniereErreur = null
+
+  for (let tentative = 0; tentative < RETRY_MAX; tentative++) {
+    let res
+    try {
+      res = await fetchAvecTimeout(url, options)
+    } catch (err) {
+      // Echec transport ou timeout : rejouable.
+      derniereErreur = err
+      console.warn(`request(${url}) — tentative ${tentative + 1}/${RETRY_MAX} : ${err.message}`)
+      if (tentative < RETRY_MAX - 1) { await pause(RETRY_DELAIS[tentative]); continue }
+      throw new Error(
+        "Connexion interrompue. Ton texte est conserve sur cet appareil : verifie ta connexion et reessaie."
+      )
+    }
+
+    if (res.ok) return res.json().catch(() => ({}))
+
+    const data = await res.json().catch(() => ({}))
+    const message = data.error || `Erreur ${res.status}`
+
+    if (RETRY_STATUTS.has(res.status) && tentative < RETRY_MAX - 1) {
+      derniereErreur = new Error(message)
+      console.warn(`request(${url}) — HTTP ${res.status}, tentative ${tentative + 1}/${RETRY_MAX}`)
+      await pause(RETRY_DELAIS[tentative])
+      continue
+    }
+
+    throw new Error(message)
+  }
+
+  throw derniereErreur || new Error('Erreur reseau inconnue.')
 }
 
 export async function createSession({ nom, prenom, email, formation, campus }) {
