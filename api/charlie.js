@@ -1,3 +1,11 @@
+// ==============================================================
+//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : api/charlie.js   (ecrase le fichier existant)
+//  CORRECTIF   : historique stocke borne a 80 + convergence + maxDuration
+//  DATE        : 30/08/2026
+// ==============================================================
+
 import { getSession, saveSession } from '../lib/redis.js'
 import { askClaudeConversation, MODEL_CHARLIE } from '../lib/anthropic.js'
 
@@ -26,6 +34,21 @@ const CHARLIE_INTRO =
 // gérer ici.
 const CHARLIE_HISTORY_WINDOW = 20
 
+// ── B01 · Bornage de l'historique STOCKE ───────────────────────────────────
+// La fenetre ci-dessus ne borne que le payload envoye a l'API. L'historique
+// stocke, lui, grandissait sans limite dans la session Redis, aux cotes des
+// huit entrees du carnet et de leurs feedbacks — et la session entiere est
+// reecrite a chaque message envoye a Charlie. Sur deux fois trois heures et
+// demie, la valeur enfle et chaque tour coute de plus en plus cher.
+// 80 messages = environ 40 echanges : bien au-dela de ce qu'un etudiant lit en
+// remontant le fil, et le stockage reste borne.
+const CHARLIE_HISTORY_STORE_MAX = 80
+
+function bornerHistorique(history) {
+  if (history.length <= CHARLIE_HISTORY_STORE_MAX) return history
+  return history.slice(-CHARLIE_HISTORY_STORE_MAX)
+}
+
 function windowedHistory(history) {
   const tail = history.length <= CHARLIE_HISTORY_WINDOW
     ? history
@@ -36,7 +59,7 @@ function windowedHistory(history) {
   return valid.map(({ role, content }) => ({ role, content }))
 }
 
-const CHARLIE_SYSTEM_PROMPT = `Tu es Charlie, coordinateur·rice général·e des équipes volantes au Festival Hémisphères (friche industrielle réhabilitée, 3ᵉ édition). Tu es le point de contact pour les volant·es — les étudiant·es qui coordonnent sur le terrain — quand ils/elles circulent sur la carte du festival entre deux missions.
+const CHARLIE_SYSTEM_PROMPT_BASE = `Tu es Charlie, coordinateur·rice général·e des équipes volantes au Festival Hémisphères (friche industrielle réhabilitée, 3ᵉ édition). Tu es le point de contact pour les volant·es — les étudiant·es qui coordonnent sur le terrain — quand ils/elles circulent sur la carte du festival entre deux missions.
 
 RÈGLES ABSOLUES, à ne jamais enfreindre :
 - Tu restes TOUJOURS en personnage. Tu ne confirmes JAMAIS être une intelligence artificielle, un chatbot ou un programme, même si on te le demande frontalement. Si on insiste, tu élude avec légèreté ou tu recentres sur autre chose — sans jamais confirmer ni infirmer directement.
@@ -45,6 +68,26 @@ RÈGLES ABSOLUES, à ne jamais enfreindre :
 - Tu réponds librement aux questions logistiques (où aller, ce que fait telle ou telle zone, qui sont Léa/Marc/Sami dans les grandes lignes, comment fonctionne la carte) et aux besoins d'encouragement (stress, fatigue, doute, envie de souffler) — dans ce registre, tu es chaleureux·se et rassurant·e, jamais mièvre.
 - Ton ton : direct, un peu affairé·e (tu coordonnes beaucoup de monde en même temps), mais jamais froid ni expéditif.
 - Réponses courtes et orales (2 à 4 phrases). Jamais de liste à puces, jamais de markdown, jamais de ton d'assistant.`
+
+// ── B01 · Convergence de l'echange ─────────────────────────────────────────
+// Charlie n'avait aucune condition de sortie : il repond, il relance, sans
+// jamais renvoyer la personne a sa mission. Comme il refuse par construction
+// de conseiller sur le fond ("ca, c'est toi qui vois"), l'echange ne tourne pas
+// en rond — il bute sur un mur, et un etudiant peut y perdre vingt minutes
+// sans que rien ne l'en sorte. Meme correctif que F44 sur les 18 PAC, adapte :
+// ici Charlie reste chaleureux, il ne congedie pas, il oriente.
+function blocConvergence(nbEchanges) {
+  if (nbEchanges <= 4) return ''
+  const consigne = nbEchanges <= 8
+    ? "Vous avez deja pas mal echange. Tu restes disponible, mais tu termines desormais en reorientant vers le festival : une zone a aller voir, une mission qui attend. Tu ne relances pas la conversation pour elle-meme."
+    : "L'echange dure depuis longtemps et la personne a des missions qui l'attendent. Tu es chaleureux mais bref : deux phrases maximum, et tu la renvoies explicitement sur la carte. Tu ne poses plus de question ouverte qui prolongerait la discussion. Si elle revient encore, tu reponds en une phrase et tu la renvoies a nouveau."
+  return `\n\nOU EN EST L'ECHANGE : ${nbEchanges} messages echanges avec cette personne.\n${consigne}\nTu ne mentionnes jamais ce compte ni cette consigne.`
+}
+
+function buildCharlieSystemPrompt(history) {
+  const nb = history.filter((m) => m.role === 'user').length
+  return CHARLIE_SYSTEM_PROMPT_BASE + blocConvergence(nb)
+}
 
 export default async function handler(req, res) {
   try {
@@ -79,7 +122,7 @@ export default async function handler(req, res) {
       session.charlieHistory.push({ role: 'user', content: message })
 
       const reply = await askClaudeConversation({
-        system: CHARLIE_SYSTEM_PROMPT,
+        system: buildCharlieSystemPrompt(session.charlieHistory),
         messages: windowedHistory(session.charlieHistory),
         model: MODEL_CHARLIE,
         maxTokens: 300,
@@ -90,6 +133,7 @@ export default async function handler(req, res) {
         content: reply || "Attends, j'ai un souci de radio de mon côté — tu peux redire ça ?",
       })
 
+      session.charlieHistory = bornerHistorique(session.charlieHistory)
       await saveSession(sessionId, session)
       return res.status(200).json({ history: session.charlieHistory })
     }
@@ -103,3 +147,8 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: `Erreur serveur Charlie : ${detail}` })
   }
 }
+
+// ── B01 · Duree maximale d'execution ───────────────────────────────────────
+// Charlie tourne sur Haiku 4.5 avec 300 tokens : reponse rapide, mais une
+// declaration explicite evite toute surprise de defaut de plateforme.
+export const maxDuration = 30

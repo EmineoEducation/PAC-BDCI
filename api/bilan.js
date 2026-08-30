@@ -1,3 +1,11 @@
+// ==============================================================
+//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : api/bilan.js   (ecrase le fichier existant)
+//  CORRECTIF   : maxDuration = 60
+//  DATE        : 30/08/2026
+// ==============================================================
+
 import { getSession, saveSession } from '../lib/redis.js'
 import { askClaude, MODEL_DEFAULT } from '../lib/anthropic.js'
 import { buildBilanPrompt } from '../lib/prompts.js'
@@ -175,3 +183,10 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: `Erreur serveur lors de la génération du bilan : ${detail}` })
   }
 }
+
+// ── B01 · Duree maximale d'execution ───────────────────────────────────────
+// Cette fonction genere du texte avec Sonnet 5 (1600 tokens), soit
+// couramment 20 a 40 secondes. Sans declaration explicite, on depend du defaut
+// de la plateforme, qui peut couper la generation en 504 au milieu. Meme
+// correctif que maxDuration = 60 pose sur les cinq blocs MSMC.
+export const maxDuration = 60

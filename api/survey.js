@@ -1,3 +1,11 @@
+// ==============================================================
+//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : api/survey.js   (ecrase le fichier existant)
+//  CORRECTIF   : suppression de VALID_IDS inutilise
+//  DATE        : 30/08/2026
+// ==============================================================
+
 // api/survey.js
 // Collecte du questionnaire de fin de PAC BDCI.
 //
@@ -28,7 +36,6 @@ export const QUESTIONS = [
   { id: 'recommandation', label: "Je recommanderais ce dispositif" },
 ]
 
-const VALID_IDS = new Set(QUESTIONS.map((q) => q.id))
 const COMMENT_MAX = 4000
 
 function clampLikert(v) {

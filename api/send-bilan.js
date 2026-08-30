@@ -1,3 +1,11 @@
+// ==============================================================
+//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  DEPOT       : EmineoEducation/PAC-BDCI
+//  DESTINATION : api/send-bilan.js   (ecrase le fichier existant)
+//  CORRECTIF   : echec bruyant si PORTFOLIO_FROM absente + maxDuration = 60
+//  DATE        : 30/08/2026
+// ==============================================================
+
 // api/send-bilan.js
 // Envoi du bilan PAC BDCI par email (Resend), avec mise en copie du référent
 // campus résolu via le hub emineo-campus-rp.
@@ -98,7 +106,13 @@ export default async function handler(req, res) {
   }
 
   const resendKey = process.env.RESEND_API_KEY
-  const from = process.env.PORTFOLIO_FROM || 'PAC Emineo <onboarding@resend.dev>'
+  // ── B01 · Plus de repli sur onboarding@resend.dev ────────────────────────
+  // Cette adresse de bac a sable Resend ne delivre QU'AU titulaire du compte.
+  // Avec l'ancien repli, une variable PORTFOLIO_FROM oubliee sur Vercel faisait
+  // partir chaque bilan dans le vide en repondant `sent: true` : l'etudiant
+  // voyait une confirmation, personne ne recevait rien. Un echec visible vaut
+  // mieux qu'une reussite mensongere.
+  const from = process.env.PORTFOLIO_FROM
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
@@ -110,6 +124,13 @@ export default async function handler(req, res) {
     if (!resendKey) {
       console.error('RESEND_API_KEY non configurée — bilan non envoyé')
       return res.status(503).json({ error: 'RESEND_API_KEY non configurée', sent: false })
+    }
+    if (!from) {
+      console.error('PORTFOLIO_FROM non configurée — bilan non envoyé (voir .env.example)')
+      return res.status(503).json({
+        error: "L'expéditeur des emails n'est pas configuré sur ce déploiement. Préviens le référent de campus — ton bilan est conservé, il pourra être renvoyé.",
+        sent: false,
+      })
     }
 
     const { map: campusRPMap, hubOk } = await getCampusRPMap()
@@ -228,3 +249,7 @@ export default async function handler(req, res) {
 // tout corps de requête dépassant ~4,5 Mo, quelle que soit la valeur déclarée.
 // La seule marge de manœuvre est côté client, sur le poids du PDF généré.
 export const config = { api: { bodyParser: { sizeLimit: '4mb' } } }
+
+// ── B01 · Duree maximale d'execution ───────────────────────────────────────
+// Appel au hub campus/RP (2,5 s max) puis envoi Resend avec piece jointe PDF.
+export const maxDuration = 60
