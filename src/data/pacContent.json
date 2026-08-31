@@ -87,7 +87,7 @@
               { "id": "attente_du_cadre", "label": "Attend le retour de Léa, reporte", "surprise": "Léa revient agacée d'avoir été sollicitée." }
             ]
           },
-          "palierC": { "text": "Léa répond enfin, mais avec une question qui remet en cause une partie du plan, sans le temps d'y répondre." },
+          "palierC": { "text": "Léa répond enfin, par message, entre deux rendez-vous. Elle a lu la note et revient sur un point précis du plan, qu'elle remet en cause. Elle repart aussitôt et demande une réponse écrite." },
           "feedbackIntermediaire": "Reprend directement la question de Léa du palier C. Observation située sur la logique de décision activée."
         },
         {
@@ -159,7 +159,7 @@
               { "id": "delegation_arbitrage", "label": "Renvoie à Marc pour clarification avant de corriger", "surprise": "Marc, débordé, répond de façon évasive." }
             ]
           },
-          "palierC": { "text": "Marc réagit de façon piquée sur un choix précis — une réaction relationnelle ciblée, pas du flou général (territoire réservé à PAC1)." },
+          "palierC": { "text": "Marc réagit par message à une modification précise apportée au document. Le ton est piqué : il conteste ce choix-là en particulier, pas l'ensemble du travail, et attend une explication écrite." },
           "feedbackIntermediaire": "Reprend cette réaction ciblée de Marc — teste la gestion d'un collègue qui prend mal une correction."
         },
         {
@@ -230,7 +230,7 @@
               { "id": "mediation_autonome", "label": "Cherche un compromis avant de répondre à l'un ou l'autre", "surprise": "Les deux relancent en parallèle, pression double." }
             ]
           },
-          "palierC": { "text": "L'un des deux découvre la réponse faite à l'autre avant la fin du temps imparti." },
+          "palierC": { "text": "Léa et Marc ont comparé leurs messages. Celui des deux qui a été traité en second découvre la réponse faite à l'autre, revient sur l'écart entre les deux positions et demande une explication avant d'aller plus loin." },
           "feedbackIntermediaire": "Reprend cette découverte croisée."
         },
         {
@@ -300,7 +300,7 @@
               { "id": "discretion_evitement", "label": "Laisse filer Sami", "surprise": "Le sujet ressurgit plus tard, non résolu." }
             ]
           },
-          "palierC": { "text": "Réaction de Sami selon le choix — reste évasif sur la suite de la relation, jamais sur le fond du problème." },
+          "palierC": { "text": "Sami réagit à ce qui vient de lui être répondu. Il reste net sur le fond du problème, mais évasif sur la suite de la relation de travail, et pose une question qui engage la façon dont le sujet va être traité." },
           "feedbackIntermediaire": "Observation sur défensive/justification vs. compréhension, et sur l'initiative ou non de clore le sujet malgré la fuite de Sami."
         },
         {
@@ -327,7 +327,7 @@
               { "id": "discretion_evitement", "label": "Minimise ou reste évasif devant Léa", "surprise": "Léa, déjà informée en partie par le partenaire concerné, revient plus tard dans l'après-midi avec une question plus directe, cette fois sans témoin." }
             ]
           },
-          "palierC": { "text": "Sami, toujours présent, réagit à la façon dont l'étudiant·e a présenté les choses avant que Léa ne parte — sans jamais revenir sur le fond du problème, il se positionne (confirme, laisse porter seul, ou minimise à son tour), ajoutant une tension non résolue sur la fiabilité du binôme aux yeux de Léa." }
+          "palierC": { "text": "Sami, toujours présent, réagit à la façon dont les choses ont été présentées devant Léa avant qu'elle ne parte — sans jamais revenir sur le fond du problème, il se positionne (confirme, laisse porter seul, ou minimise à son tour), ajoutant une tension non résolue sur la fiabilité du binôme aux yeux de Léa." }
         }
       ],
       "feedbackFinal": {
