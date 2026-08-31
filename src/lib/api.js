@@ -134,18 +134,29 @@ export async function submitBarnum({ sessionId, answers }) {
   return data.portrait
 }
 
-export async function fetchSynthese2({ sessionId, pacId, situationId, choiceLabel, palierBText, reaction1Text }) {
+// Synthèse 1 — appelée à la soumission du palier B. Classe la production vers une
+// branche et fait jouer la scène par le personnage (correctif du 31/08 : la Synthèse 1
+// était auparavant un texte fixe, identique pour toute la cohorte).
+export async function fetchSynthese1({ sessionId, pacId, situationId, choiceLabel, palierBText }) {
+  return request('/api/synthese1', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sessionId, pacId, situationId, choiceLabel, palierBText }),
+  })
+}
+
+export async function fetchSynthese2({ sessionId, pacId, situationId, synthese1Text, matchedTendencyId, reaction1Text }) {
   return request('/api/synthese2', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionId, pacId, situationId, choiceLabel, palierBText, reaction1Text }),
+    body: JSON.stringify({ sessionId, pacId, situationId, synthese1Text, matchedTendencyId, reaction1Text }),
   })
 }
 
 export async function submitResponse({
   sessionId, pacId, situationId, choiceLabel, focusLoss,
   palierBText, matchedTendencyId, surpriseText,
-  reaction1Text, synthese2Text, reaction2Text,
+  synthese1Text, reaction1Text, synthese2Text, reaction2Text,
 }) {
   return request('/api/respond', {
     method: 'POST',
@@ -153,7 +164,7 @@ export async function submitResponse({
     body: JSON.stringify({
       sessionId, pacId, situationId, choiceLabel, focusLoss,
       palierBText, matchedTendencyId, surpriseText,
-      reaction1Text, synthese2Text, reaction2Text,
+      synthese1Text, reaction1Text, synthese2Text, reaction2Text,
     }),
   })
 }
