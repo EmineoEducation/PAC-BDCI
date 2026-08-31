@@ -110,6 +110,7 @@ export default async function handler(req, res) {
           matchedTendencyId: tendency?.id || null,
           offTree: false,
           surpriseText: tendency?.surprise || 'Surprise de remplissage.',
+          synthese1Text: 'Synthèse 1 de remplissage, produite par /api/dev-seed.',
           reaction1Text: FILLER,
           synthese2Text: 'Synthèse 2 de remplissage, produite par /api/dev-seed.',
           reaction2Text:

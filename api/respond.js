@@ -1,9 +1,9 @@
 // ==============================================================
-//  LIVRAISON B01 - PAC BDCI - CORRECTIFS AVANT 1re SESSION
+//  LIVRAISON B03 - PAC BDCI - SYNTHESE 1 JOUEE
 //  DEPOT       : EmineoEducation/PAC-BDCI
 //  DESTINATION : api/respond.js   (ecrase le fichier existant)
-//  CORRECTIF   : maxDuration = 60
-//  DATE        : 30/08/2026
+//  CORRECTIF   : persistance de synthese1Text + feedback ancre dessus
+//  DATE        : 31/08/2026
 // ==============================================================
 
 import { getSession, saveSession } from '../lib/redis.js'
@@ -15,13 +15,13 @@ import { persistTrace } from '../lib/feedback.js'
 
 // POST /api/respond
 // { sessionId, pacId, situationId, choiceLabel, palierBText, matchedTendencyId,
-//   surpriseText, reaction1Text, synthese2Text, reaction2Text }
+//   surpriseText, synthese1Text, reaction1Text, synthese2Text, reaction2Text }
 //
 // Appelé une seule fois par situation, au moment où reaction2 est soumise (fin du cycle
 // "le monde résiste" — chantier densité temporelle, 21/07). Persiste l'entrée complète
 // (palierB + les deux réactions) et génère le feedback intermédiaire (situation 1) ou
-// final + clôture du PAC (situation 2). matchedTendencyId/surpriseText proviennent de
-// l'appel préalable à /api/synthese2, pas reclassifiés ici.
+// final + clôture du PAC (situation 2). matchedTendencyId/surpriseText/synthese1Text
+// proviennent de l'appel préalable à /api/synthese1, pas reclassifiés ici.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     const {
       sessionId, pacId, situationId, choiceLabel,
       palierBText, matchedTendencyId, surpriseText, focusLoss,
-      reaction1Text, synthese2Text, reaction2Text,
+      synthese1Text, reaction1Text, synthese2Text, reaction2Text,
     } = body || {}
 
     if (!sessionId || !pacId || !situationId || !palierBText || !reaction1Text || !reaction2Text) {
@@ -75,6 +75,7 @@ export default async function handler(req, res) {
       matchedTendencyId: matchedTendencyId || null,
       offTree: matchedTendencyId === 'hors_arbre',
       surpriseText: surpriseText || null,
+      synthese1Text: synthese1Text || null,
       reaction1Text,
       synthese2Text: synthese2Text || null,
       reaction2Text,
@@ -85,7 +86,7 @@ export default async function handler(req, res) {
 
     if (situation.order === 1) {
       const { system, prompt } = buildFeedbackIntermediairePrompt({
-        palierCText: situation.palierC.text,
+        synthese1Text,
         reaction1Text,
         synthese2Text,
         reaction2Text,
@@ -98,9 +99,9 @@ export default async function handler(req, res) {
     } else {
       const s1Entry = session.entries.find((e) => e.pacId === pacId && e.order === 1)
       const s1Texts = s1Entry
-        ? `Situation 1 — réaction 1 : ${s1Entry.reaction1Text}\nSituation 1 — rebondissement : ${s1Entry.synthese2Text || '(non disponible)'}\nSituation 1 — réaction 2 : ${s1Entry.reaction2Text}`
+        ? `Situation 1 — ce que le personnage a dit : ${s1Entry.synthese1Text || '(non disponible)'}\nSituation 1 — réaction 1 : ${s1Entry.reaction1Text}\nSituation 1 — rebondissement : ${s1Entry.synthese2Text || '(non disponible)'}\nSituation 1 — réaction 2 : ${s1Entry.reaction2Text}`
         : '(situation 1 non disponible)'
-      const s2Texts = `Situation 2 — réaction 1 : ${reaction1Text}\nSituation 2 — rebondissement : ${synthese2Text || '(non disponible)'}\nSituation 2 — réaction 2 : ${reaction2Text}`
+      const s2Texts = `Situation 2 — ce que le personnage a dit : ${synthese1Text || '(non disponible)'}\nSituation 2 — réaction 1 : ${reaction1Text}\nSituation 2 — rebondissement : ${synthese2Text || '(non disponible)'}\nSituation 2 — réaction 2 : ${reaction2Text}`
 
       const { system, prompt } = buildFeedbackFinalPrompt({
         posture: pac.posture,

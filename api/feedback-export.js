@@ -55,7 +55,7 @@ function toCsv(rows, columns) {
 const TRACE_COLUMNS = [
   'student', 'pacId', 'situationId', 'order', 'choiceLabel', 'matchedTendencyId',
   'offTree', 'awayCount', 'awayMs', 'timestamp',
-  'palierBText', 'surpriseText', 'reaction1Text', 'synthese2Text', 'reaction2Text',
+  'palierBText', 'surpriseText', 'synthese1Text', 'reaction1Text', 'synthese2Text', 'reaction2Text',
   'feedbackIntermediaire', 'feedbackFinal',
 ]
 
