@@ -11,7 +11,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useSession } from '../lib/SessionContext.jsx'
 import { isPacUnlocked } from '../lib/progression.js'
-import { fetchSynthese2, submitResponse } from '../lib/api.js'
+import { fetchSynthese1, fetchSynthese2, submitResponse } from '../lib/api.js'
 import pacContent from '../data/pacContent.json'
 import { useFocusLoss, formatAway } from '../lib/useFocusLoss.js'
 
@@ -165,9 +165,11 @@ export default function Portal3Carnet() {
   const [palierBText, setPalierBText] = useState('')
   const [reaction1Text, setReaction1Text] = useState('')
   const [reaction2Text, setReaction2Text] = useState('')
+  const [synthese1Text, setSynthese1Text] = useState(null)
   const [synthese2Text, setSynthese2Text] = useState(null)
   const [matchedTendencyId, setMatchedTendencyId] = useState(null)
   const [surpriseText, setSurpriseText] = useState(null)
+  const [loadingSynthese1, setLoadingSynthese1] = useState(false)
   const [loadingSynthese2, setLoadingSynthese2] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [lastResult, setLastResult] = useState(null)
@@ -185,6 +187,7 @@ export default function Portal3Carnet() {
     setPalierBText('')
     setReaction1Text('')
     setReaction2Text('')
+    setSynthese1Text(null)
     setSynthese2Text(null)
     setMatchedTendencyId(null)
     setSurpriseText(null)
@@ -197,6 +200,7 @@ export default function Portal3Carnet() {
       setPalierBText(draft.palierBText || '')
       setReaction1Text(draft.reaction1Text || '')
       setReaction2Text(draft.reaction2Text || '')
+      setSynthese1Text(draft.synthese1Text ?? null)
       setSynthese2Text(draft.synthese2Text ?? null)
       setMatchedTendencyId(draft.matchedTendencyId ?? null)
       setSurpriseText(draft.surpriseText ?? null)
@@ -214,13 +218,14 @@ export default function Portal3Carnet() {
     const timeout = setTimeout(() => {
       saveDraft(pacId, activeSituation.id, {
         step, choiceLabel, palierBText, reaction1Text, reaction2Text,
-        synthese2Text, matchedTendencyId, surpriseText,
+        synthese1Text, synthese2Text, matchedTendencyId, surpriseText,
       })
     }, 400)
     return () => clearTimeout(timeout)
   }, [
     pacId, activeSituation?.id, draftRestored, step, choiceLabel,
-    palierBText, reaction1Text, reaction2Text, synthese2Text, matchedTendencyId, surpriseText,
+    palierBText, reaction1Text, reaction2Text, synthese1Text, synthese2Text,
+    matchedTendencyId, surpriseText,
   ])
 
   if (!pac) return <p className="p-8 font-body">PAC introuvable.</p>
@@ -301,9 +306,29 @@ export default function Portal3Carnet() {
     setStep('B')
   }
 
-  function handleSubmitB() {
-    // Synthèse 1 = palierC.text, déjà écrit dans le contenu — aucun appel réseau ici.
-    setStep('reaction1')
+  // Correctif du 31/08 : la Synthèse 1 n'est plus un texte fixe pris dans le contenu.
+  // Elle est jouée par le personnage à partir de ce qui vient d'être écrit, pour qu'elle
+  // nomme un point précis de la production et pose une vraie question — condition pour
+  // que la Réaction 1 soit possible.
+  async function handleSubmitSynthese1() {
+    setLoadingSynthese1(true)
+    try {
+      const data = await fetchSynthese1({
+        sessionId: session.id,
+        pacId,
+        situationId: activeSituation.id,
+        choiceLabel,
+        palierBText,
+      })
+      setSynthese1Text(data.synthese1Text)
+      setMatchedTendencyId(data.matchedTendencyId)
+      setSurpriseText(data.surpriseText)
+      setStep('reaction1')
+    } catch (err) {
+      alert(`Erreur : ${err.message}`)
+    } finally {
+      setLoadingSynthese1(false)
+    }
   }
 
   async function handleSubmitReaction1() {
@@ -313,13 +338,11 @@ export default function Portal3Carnet() {
         sessionId: session.id,
         pacId,
         situationId: activeSituation.id,
-        choiceLabel,
-        palierBText,
+        synthese1Text,
+        matchedTendencyId,
         reaction1Text,
       })
       setSynthese2Text(data.synthese2Text)
-      setMatchedTendencyId(data.matchedTendencyId)
-      setSurpriseText(data.surpriseText)
       setStep('reaction2')
     } catch (err) {
       alert(`Erreur : ${err.message}`)
@@ -340,6 +363,7 @@ export default function Portal3Carnet() {
         palierBText,
         matchedTendencyId,
         surpriseText,
+        synthese1Text,
         reaction1Text,
         synthese2Text,
         reaction2Text,
@@ -503,11 +527,11 @@ export default function Portal3Carnet() {
                           {wcB} mots · repère : {minWordsB} à {maxWordsB}
                         </span>
                         <button
-                          onClick={() => envoyerAvecRepere(wcB, minWordsB, handleSubmitB)}
-                          disabled={wcB < PLANCHER_MOTS}
+                          onClick={() => envoyerAvecRepere(wcB, minWordsB, handleSubmitSynthese1)}
+                          disabled={wcB < PLANCHER_MOTS || loadingSynthese1}
                           className="bg-accent text-paper text-[14.5px] font-semibold px-5 py-2.5 rounded-[10px] disabled:opacity-40 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
                         >
-                          Envoyer ma réponse
+                          {loadingSynthese1 ? 'Envoi...' : 'Envoyer ma réponse'}
                         </button>
                       </div>
                     )}
@@ -515,14 +539,14 @@ export default function Portal3Carnet() {
                   </div>
                 )}
 
-                {/* Synthèse 1 (palier C, affiché tel quel) + Réaction 1 */}
+                {/* Synthèse 1 (jouée par le personnage, cf. /api/synthese1) + Réaction 1 */}
                 {(step === 'reaction1' || step === 'reaction2' || step === 'done') && (
                   <div className="mt-8">
                     <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-accent mb-2 pt-5 border-t border-dashed border-rule">
                       Synthèse 1
                     </p>
                     <p className="text-[15.5px] leading-relaxed max-w-[68ch] bg-[#fbf7ee] border-l-[3px] border-pac1 rounded-r-lg px-4 py-3">
-                      {activeSituation.palierC.text}
+                      {synthese1Text}
                     </p>
 
                     <p className="text-[11px] font-semibold tracking-[0.1em] uppercase text-ink-muted mt-5 mb-2">
