@@ -47,6 +47,18 @@ import pacContent from '../src/data/pacContent.json' with { type: 'json' }
 // Volontairement SANS nom de personnage : `pac.character` vaut
 // "Tension Léa / Marc" sur PAC3, ce qui donnerait une phrase cassée si on
 // l'injectait dans une tournure du type "X relit ta réponse".
+// ── Invariant de jouabilité (contre-check du 01/09) ─────────────────────────
+// Une génération tronquée n'est pas vide : elle revient comme une phrase coupée
+// en plein milieu, sans question. Testée uniquement sur "texte non vide", elle
+// passait le filtre et l'étudiant·e recevait une scène impossible à répondre —
+// exactement le défaut corrigé le 31/08, réintroduit par la troncature.
+// La règle métier est explicite depuis cette date : une scène doit poser UNE
+// question à laquelle on peut répondre par écrit. On la vérifie ici.
+function sceneJouable(texte) {
+  const t = (texte || '').trim()
+  return t.length >= 60 && t.includes('?')
+}
+
 function repliScene() {
   return `Ta réponse est passée, mais elle laisse un point en suspens que personne ne tranchera à ta place. Le temps continue de courir et une décision est attendue. Qu'est-ce que tu sécurises en premier, et qui doit être prévenu ?`
 }
@@ -105,10 +117,12 @@ export default async function handler(req, res) {
     }
 
     let degraded = false
-    if (!synthese2Text.trim()) {
+    if (!sceneJouable(synthese2Text)) {
       degraded = true
+      console.error(
+        `[synthese2] scène non jouable (${synthese2Text.trim().length} car., question ${synthese2Text.includes('?') ? 'présente' : 'absente'}) — repli servi (${pacId}/${situationId}).`
+      )
       synthese2Text = repliScene()
-      console.error(`[synthese2] scène en repli servie (${pacId}/${situationId}).`)
     }
 
     return res.status(200).json({ synthese2Text, degraded })

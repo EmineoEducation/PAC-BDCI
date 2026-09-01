@@ -60,6 +60,18 @@ function repliClassification(situation) {
 // "Tension Léa / Marc" sur PAC3, ce qui donnerait une phrase cassée si on
 // l'injectait dans une tournure du type "X revient vers toi". Le repli reste
 // donc à la deuxième personne, sans locuteur nommé.
+// ── Invariant de jouabilité (contre-check du 01/09) ─────────────────────────
+// Une génération tronquée n'est pas vide : elle revient comme une phrase coupée
+// en plein milieu, sans question. Testée uniquement sur "texte non vide", elle
+// passait le filtre et l'étudiant·e recevait une scène impossible à répondre —
+// exactement le défaut corrigé le 31/08, réintroduit par la troncature.
+// La règle métier est explicite depuis cette date : une scène doit poser UNE
+// question à laquelle on peut répondre par écrit. On la vérifie ici.
+function sceneJouable(texte) {
+  const t = (texte || '').trim()
+  return t.length >= 60 && t.includes('?')
+}
+
 function repliScene(surpriseText) {
   const fait = surpriseText?.trim()
     ? `Ce qui vient de se passer : ${surpriseText.trim()}`
@@ -167,10 +179,12 @@ export default async function handler(req, res) {
       console.error(`[synthese1] génération de scène échouée (${pacId}/${situationId}) :`, err?.message || err)
     }
 
-    if (!synthese1Text.trim()) {
+    if (!sceneJouable(synthese1Text)) {
       sceneDegraded = true
+      console.error(
+        `[synthese1] scène non jouable (${synthese1Text.trim().length} car., question ${synthese1Text.includes('?') ? 'présente' : 'absente'}) — repli servi (${pacId}/${situationId}).`
+      )
       synthese1Text = repliScene(surpriseText)
-      console.error(`[synthese1] scène en repli servie (${pacId}/${situationId}).`)
     }
 
     return res.status(200).json({
