@@ -44,8 +44,11 @@ import pacContent from '../src/data/pacContent.json' with { type: 'json' }
 // Repli de mise en scène : sobre, mais conserve les deux propriétés qui rendent
 // la scène jouable — on rebondit sur ce qui vient d'être répondu, et on pose une
 // question explicite à laquelle une réponse courte est attendue.
-function repliScene(character) {
-  return `${character} relit ta réponse et revient vers toi : d'accord sur le principe, mais ça laisse un point en suspens de mon côté et je ne peux pas le trancher à ta place. Qu'est-ce que tu sécurises en premier, et qui doit être prévenu ?`
+// Volontairement SANS nom de personnage : `pac.character` vaut
+// "Tension Léa / Marc" sur PAC3, ce qui donnerait une phrase cassée si on
+// l'injectait dans une tournure du type "X relit ta réponse".
+function repliScene() {
+  return `Ta réponse est passée, mais elle laisse un point en suspens que personne ne tranchera à ta place. Le temps continue de courir et une décision est attendue. Qu'est-ce que tu sécurises en premier, et qui doit être prévenu ?`
 }
 
 export default async function handler(req, res) {
@@ -55,6 +58,9 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Même butoir que /api/synthese1 : rester sous maxDuration = 60 s.
+    const deadlineAt = Date.now() + 48000
+
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
     const { sessionId, pacId, situationId, synthese1Text, matchedTendencyId, reaction1Text } = body || {}
 
@@ -93,7 +99,7 @@ export default async function handler(req, res) {
         reaction1Text,
         character: pac.character,
       })
-      synthese2Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 1200 })
+      synthese2Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 2000, deadlineAt })
     } catch (err) {
       console.error(`[synthese2] génération échouée (${pacId}/${situationId}) :`, err?.message || err)
     }
@@ -101,7 +107,7 @@ export default async function handler(req, res) {
     let degraded = false
     if (!synthese2Text.trim()) {
       degraded = true
-      synthese2Text = repliScene(pac.character)
+      synthese2Text = repliScene()
       console.error(`[synthese2] scène en repli servie (${pacId}/${situationId}).`)
     }
 

@@ -56,11 +56,15 @@ function repliClassification(situation) {
 // Repli de mise en scène : uniquement si le modèle est totalement indisponible.
 // Volontairement sobre, mais respecte les deux règles qui rendent la scène
 // jouable — un fait concret, puis une question explicite à laquelle répondre.
-function repliScene({ character, surpriseText }) {
+// Volontairement SANS nom de personnage : `pac.character` vaut
+// "Tension Léa / Marc" sur PAC3, ce qui donnerait une phrase cassée si on
+// l'injectait dans une tournure du type "X revient vers toi". Le repli reste
+// donc à la deuxième personne, sans locuteur nommé.
+function repliScene(surpriseText) {
   const fait = surpriseText?.trim()
-    ? surpriseText.trim()
-    : "la situation vient de bouger et ce qui avait été prévu ne tient plus tel quel"
-  return `${character} revient vers toi : ${fait} Je n'ai pas le détail de ce que tu as prévu de ton côté. Sur quoi tu t'appuies pour trancher maintenant, et qu'est-ce que tu fais en premier ?`
+    ? `Ce qui vient de se passer : ${surpriseText.trim()}`
+    : "La situation vient de bouger, et ce qui était prévu ne tient plus tel quel."
+  return `${fait} Personne n'a le temps de reprendre le dossier avec toi maintenant, et il faut quand même avancer. Sur quoi tu t'appuies pour trancher, et qu'est-ce que tu fais en premier ?`
 }
 
 export default async function handler(req, res) {
@@ -70,6 +74,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Butoir temporel : maxDuration vaut 60 s. Au-delà, la plateforme coupe en
+    // 504, que le client rejoue 3 fois — l'étudiant·e attendrait des minutes pour
+    // finir sur une erreur. On préfère une scène complète mais moins retravaillée.
+    const deadlineAt = Date.now() + 48000
+
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
     const { sessionId, pacId, situationId, choiceLabel, palierBText } = body || {}
 
@@ -105,6 +114,7 @@ export default async function handler(req, res) {
         prompt: classifyPrompt,
         model: MODEL_DEFAULT,
         maxTokens: 4000,
+        deadlineAt,
       })
       if (!classification || typeof classification !== 'object' || !classification.matchedTendencyId) {
         throw new Error('Classification incomplète (matchedTendencyId absent).')
@@ -137,7 +147,12 @@ export default async function handler(req, res) {
     //    la scène impossible à jouer.
     let synthese1Text = ''
     let sceneDegraded = false
+    // Si la classification a déjà consommé l'essentiel du budget temps, on ne
+    // lance même pas la génération de scène : elle finirait en 504 (donc en
+    // erreur pour l'étudiant·e) là où le repli, lui, est immédiat et jouable.
+    const tempsRestant = deadlineAt - Date.now() > 20000
     try {
+      if (!tempsRestant) throw new Error('Budget temps épuisé avant la mise en scène.')
       const { system, prompt } = buildSynthese1Prompt({
         situationText: situation.palierA.text,
         choiceLabel,
@@ -147,14 +162,14 @@ export default async function handler(req, res) {
         palierBText,
         character: pac.character,
       })
-      synthese1Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 1500 })
+      synthese1Text = await askClaude({ system, prompt, model: MODEL_DEFAULT, maxTokens: 2500, deadlineAt })
     } catch (err) {
       console.error(`[synthese1] génération de scène échouée (${pacId}/${situationId}) :`, err?.message || err)
     }
 
     if (!synthese1Text.trim()) {
       sceneDegraded = true
-      synthese1Text = repliScene({ character: pac.character, surpriseText })
+      synthese1Text = repliScene(surpriseText)
       console.error(`[synthese1] scène en repli servie (${pacId}/${situationId}).`)
     }
 
